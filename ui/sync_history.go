@@ -37,7 +37,7 @@ func (s *SyncHistoryScreen) Draw(input SyncHistoryInput) (SyncHistoryOutput, err
 		return output, nil
 	}
 
-	records := cm.GetSaveSyncHistory(input.DeviceID, 50)
+	records := cm.GetSaveSyncHistory(input.DeviceID)
 
 	if len(records) == 0 {
 		gaba.ConfirmationMessage(
@@ -65,12 +65,18 @@ func (s *SyncHistoryScreen) Draw(input SyncHistoryInput) (SyncHistoryOutput, err
 	return output, nil
 }
 
+const (
+	cloudOutline         = "\U000F0163"
+	cloudDownloadOutline = "\U000F0B7D"
+	cloudUploadOutline   = "\U000F0B7E"
+)
+
 func actionIcon(action string) string {
 	switch action {
 	case "upload":
-		return buttons.CloudUpload
+		return cloudUploadOutline
 	case "download":
-		return buttons.CloudDownload
+		return cloudDownloadOutline
 	default:
 		return action
 	}
@@ -121,8 +127,9 @@ func (s *SyncHistoryScreen) buildSections(records []cache.SaveSyncRecord, cm *ca
 	groupIndex := make(map[string]int)
 
 	for _, r := range records {
-		dateKey := r.SyncedAt.Format("January 2, 2006")
-		timeStr := r.SyncedAt.Format("15:04")
+		local := r.SyncedAt.Local()
+		dateKey := local.Format("January 2, 2006")
+		timeStr := local.Format("15:04")
 		platform := platformByRomID[r.RomID]
 
 		entry := rowEntry{
@@ -142,7 +149,7 @@ func (s *SyncHistoryScreen) buildSections(records []cache.SaveSyncRecord, cm *ca
 	}
 
 	headers := []string{
-		"",
+		cloudOutline,
 		i18n.Localize(&goi18n.Message{ID: "sync_history_col_game", Other: "Game"}, nil),
 		i18n.Localize(&goi18n.Message{ID: "sync_history_col_platform", Other: "Platform"}, nil),
 		i18n.Localize(&goi18n.Message{ID: "sync_history_col_time", Other: "Time"}, nil),
