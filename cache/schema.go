@@ -9,7 +9,7 @@ import (
 	gaba "github.com/BrandonKowalski/gabagool/v2/pkg/gabagool"
 )
 
-const schemaVersion = 9
+const schemaVersion = 10
 
 // nowUTC returns the current UTC time formatted as RFC3339 for consistent datetime storage
 func nowUTC() string {
@@ -342,6 +342,32 @@ func createTables(db *sql.DB) error {
 			status TEXT DEFAULT 'pending'
 		)
 	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`
+		CREATE TABLE IF NOT EXISTS save_sync_history (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			rom_id INTEGER NOT NULL,
+			rom_name TEXT NOT NULL,
+			action TEXT NOT NULL,
+			device_id TEXT NOT NULL,
+			save_id INTEGER,
+			file_name TEXT,
+			synced_at TEXT NOT NULL
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`CREATE INDEX IF NOT EXISTS idx_save_sync_history_rom_id ON save_sync_history(rom_id)`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`CREATE INDEX IF NOT EXISTS idx_save_sync_history_device_id ON save_sync_history(device_id)`)
 	if err != nil {
 		return err
 	}
