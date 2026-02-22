@@ -355,9 +355,8 @@ other = "Data de Lançamento"
 hash = "sha1-3deb7456519697ecf4eefc455516c969a3681bae"
 other = "Tipo"
 
-[game_options_save_directory]
-hash = "sha1-fc8701ec896ff0a049c9b2e9028122c196123bcc"
-other = "Diretório de salvamento"
+[game_options_save_slot]
+other = "Padrão"
 
 [game_options_title]
 hash = "sha1-7ce298bd6c51841a35d3983c23dae2d00f50b6af"
@@ -581,6 +580,21 @@ other = "Beta"
 hash = "sha1-d96e5b2dd07c1733b2b013bd82922c22baade37d"
 other = "Estável"
 
+[save_conflict_keep_local]
+other = "Manter local"
+
+[save_conflict_keep_remote]
+other = "Manter remoto"
+
+[save_conflict_title]
+other = "Resolver conflitos"
+
+[save_sync_conflicts]
+other = "Conflitos"
+
+[save_sync_device_name]
+other = "Nome do dispositivo"
+
 [save_sync_downloaded]
 hash = "sha1-c6197029254600e042230dbe5880e70c4b842e07"
 other = "Baixado"
@@ -588,6 +602,9 @@ other = "Baixado"
 [save_sync_failed]
 hash = "sha1-09fef5d8d9a3c86b2523fef60d512606e7fe0003"
 other = "Falhou"
+
+[save_sync_errors]
+other = "Erros"
 
 [save_sync_mode_automatic]
 hash = "sha1-ac9041e76816a34aba228a736ec30da6984c5777"
@@ -604,6 +621,12 @@ other = "Desligado"
 [save_sync_rom_not_found]
 hash = "sha1-87d49e3909864beb606127edfc23062674d52829"
 other = "{{.Name}} (Não encontrado no RomM)"
+
+[save_sync_no_changes]
+other = "Tudo atualizado!\nVá jogar!"
+
+[save_sync_results_title]
+other = "Sincronização concluída"
 
 [save_sync_scanning]
 hash = "sha1-6e0e349d1314bd7909fa32d8c46698b412601d19"
@@ -652,6 +675,15 @@ other = "Tudo atualizado!\nVá jogar!"
 [save_sync_uploaded]
 hash = "sha1-80c494898ac90610a67c95502d2a56b4af4963f1"
 other = "Enviado"
+
+[device_registration_prompt]
+other = "Digite um nome para este dispositivo"
+
+[device_registration_registering]
+other = "Registrando dispositivo..."
+
+[device_registration_updating]
+other = "Atualizando dispositivo..."
 
 [settings_advanced]
 hash = "sha1-4d064726954a17487f94e931f5b157b733ec22ed"
@@ -803,6 +835,63 @@ other = "Pré-carregar Artwork"
 [settings_title]
 hash = "sha1-c7f73bb54d928922c3838bb789ee9fb8a5b1eb37"
 other = "Configurações"
+
+[sync_history_empty]
+other = "No sync history found."
+
+[sync_history_no_cache]
+other = "Cache not available."
+
+[sync_history_title]
+other = "Sync History"
+
+[sync_menu_history]
+other = "View History"
+
+[sync_menu_sync_now]
+other = "Sync Now"
+
+[sync_menu_synced_games]
+other = "Synced Games"
+
+[sync_menu_title]
+other = "Save Sync"
+
+[synced_games_active_slot]
+other = "Active Slot"
+
+[synced_games_detail_error]
+other = "Failed to load save details."
+
+[synced_games_empty]
+other = "No synced games found."
+
+[synced_games_error]
+other = "Failed to load synced games."
+
+[synced_games_latest_file]
+other = "File"
+
+[synced_games_latest_save]
+other = "Latest Save"
+
+[synced_games_loading]
+other = "Loading synced games..."
+
+[synced_games_loading_detail]
+other = "Loading save details..."
+
+[synced_games_overview]
+other = "Overview"
+
+[synced_games_save_count]
+other = "Save Count"
+
+[synced_games_title]
+other = "Synced Games"
+
+[synced_games_total_saves]
+other = "Total Saves"
 
 [startup_error_action_exit]
 hash = "sha1-f83b6fe3aebf13744e866019556d9129cd7a55be"
