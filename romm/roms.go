@@ -287,7 +287,10 @@ func (r Rom) MaxPlayerCount() int {
 }
 
 func (r Rom) GetArtworkURL(kind artutil.ArtKind, host Host) string {
-	var coverURL string
+	var (
+		coverURL string
+		boxPath  string
+	)
 	var err error
 	logger := gaba.GetLogger()
 	logger.Debug("Getting artwork URL for ROM", "romID", r.ID, "romName", r.Name, "artKind", kind)
@@ -295,6 +298,7 @@ func (r Rom) GetArtworkURL(kind artutil.ArtKind, host Host) string {
 	if kind == artutil.ArtKindBox2D {
 		if r.ScreenScraperMetadata.Box2DURL != "" {
 			coverURL = r.ScreenScraperMetadata.Box2DURL
+			boxPath = r.ScreenScraperMetadata.Box2DURL
 		}
 	} else if kind == artutil.ArtKindBox3D {
 		if r.ScreenScraperMetadata.Box3DPath != "" {
@@ -303,34 +307,41 @@ func (r Rom) GetArtworkURL(kind artutil.ArtKind, host Host) string {
 			} else {
 				coverURL, err = url.JoinPath(host.URL(), r.ScreenScraperMetadata.Box3DPath)
 			}
+			boxPath = r.ScreenScraperMetadata.Box3DPath
 		} else if r.ScreenScraperMetadata.Box3DURL != "" {
 			coverURL = r.ScreenScraperMetadata.Box3DURL
+			boxPath = r.ScreenScraperMetadata.Box3DURL
 		}
 	} else if kind == artutil.ArtKindMixImage {
 		if r.ScreenScraperMetadata.MiximagePath != "" {
-			if !strings.Contains(r.ScreenScraperMetadata.Box3DPath, RommAssetPrefix) {
+			if !strings.Contains(r.ScreenScraperMetadata.MiximagePath, RommAssetPrefix) {
 				coverURL, err = url.JoinPath(host.URL(), RommAssetPrefix, r.ScreenScraperMetadata.MiximagePath)
 			} else {
 				coverURL, err = url.JoinPath(host.URL(), r.ScreenScraperMetadata.MiximagePath)
 			}
+			boxPath = r.ScreenScraperMetadata.MiximagePath
 		} else if r.ScreenScraperMetadata.MiximageURL != "" {
 			coverURL = r.ScreenScraperMetadata.MiximageURL
+			boxPath = r.ScreenScraperMetadata.MiximageURL
 		}
 	}
 
 	if kind == artutil.ArtKindDefault || coverURL == "" {
 		if r.PathCoverSmall != "" {
 			coverURL, err = url.JoinPath(host.URL(), r.PathCoverSmall)
+			boxPath = r.PathCoverSmall
 		} else if r.PathCoverLarge != "" {
 			coverURL, err = url.JoinPath(host.URL(), r.PathCoverLarge)
+			boxPath = r.PathCoverLarge
 		} else if r.URLCover != "" {
 			coverURL = r.URLCover
+			boxPath = r.URLCover
 		}
 	}
 
 	logger.Debug("Using cover URL", "url", coverURL)
 	if coverURL == "" && err != nil {
-		logger.Error("Error joining host URL with Box3D path", "error", err, "hostURL", host.ToLoggable(), "box3DPath", r.ScreenScraperMetadata.Box3DPath)
+		logger.Error("Error joining host URL with box path", "error", err, "hostURL", host.ToLoggable(), "boxPath", boxPath)
 	}
 
 	return strings.ReplaceAll(coverURL, " ", "%20")
@@ -349,7 +360,7 @@ func (r Rom) GetScreenshotURL(host Host) string {
 	}
 
 	if screenshotURL == "" && err != nil {
-		logger.Error("Error joining host URL with screenshot path", "error", err, "hostURL", host.ToLoggable(), "screenshotPath", r.UserScreenshots[0].URLPath)
+		logger.Error("Error joining host URL with screenshot path", "error", err, "hostURL", host.ToLoggable(), "screenshotPath", screenshotURL)
 	}
 
 	return strings.ReplaceAll(screenshotURL, " ", "%20")
