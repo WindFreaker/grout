@@ -72,7 +72,7 @@ func (s *SaveSyncScreen) Execute(input SaveSyncInput) SaveSyncOutput {
 	}
 
 	// Slot selection for first-time downloads with multiple slots
-	s.resolveMultiSlotDownloads(config, items)
+	items = s.resolveMultiSlotDownloads(config, items)
 
 	// Check for conflicts and show resolution screen
 	var conflicts []sync.SyncItem
@@ -170,7 +170,9 @@ func (s *SaveSyncScreen) executeNewSlotUpload(client *romm.Client, config *inter
 	return SaveSyncOutput{}
 }
 
-func (s *SaveSyncScreen) resolveMultiSlotDownloads(config *internal.Config, items []sync.SyncItem) {
+// resolveMultiSlotDownloads shows a slot picker for first-time downloads that have
+// multiple slots on the server. Returns the (potentially modified) items slice.
+func (s *SaveSyncScreen) resolveMultiSlotDownloads(config *internal.Config, items []sync.SyncItem) []sync.SyncItem {
 	defaultLabel := i18n.Localize(&goi18n.Message{ID: "common_default", Other: "Default"}, nil)
 
 	// Collect items that need slot selection
@@ -191,7 +193,7 @@ func (s *SaveSyncScreen) resolveMultiSlotDownloads(config *internal.Config, item
 	}
 
 	if len(choices) == 0 {
-		return
+		return items
 	}
 
 	// Build an OptionsList with one row per game
@@ -236,7 +238,7 @@ func (s *SaveSyncScreen) resolveMultiSlotDownloads(config *internal.Config, item
 		optionItems,
 	)
 	if err != nil {
-		return // Cancelled — proceed with defaults
+		return items // Cancelled — proceed with defaults
 	}
 
 	// Apply selections
@@ -256,6 +258,7 @@ func (s *SaveSyncScreen) resolveMultiSlotDownloads(config *internal.Config, item
 	}
 
 	internal.SaveSlotPreferences(config)
+	return items
 }
 
 func (s *SaveSyncScreen) showReport(report sync.SyncReport) {

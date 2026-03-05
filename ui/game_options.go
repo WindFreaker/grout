@@ -38,16 +38,23 @@ func (s *GameOptionsScreen) Draw(input GameOptionsInput) (GameOptionsOutput, err
 	var slotNames []string
 	if input.Host.DeviceID != "" {
 		client := romm.NewClientFromHost(input.Host, config.ApiTimeout)
-		summary, err := client.GetSaveSummary(input.Game.ID)
-		if err == nil {
-			for _, slot := range summary.Slots {
-				name := "default"
-				if slot.Slot != nil {
-					name = *slot.Slot
+		gaba.ProcessMessage(
+			i18n.Localize(&goi18n.Message{ID: "synced_games_loading_detail", Other: "Loading save details..."}, nil),
+			gaba.ProcessMessageOptions{ShowThemeBackground: true},
+			func() (any, error) {
+				summary, err := client.GetSaveSummary(input.Game.ID)
+				if err == nil {
+					for _, slot := range summary.Slots {
+						name := "default"
+						if slot.Slot != nil {
+							name = *slot.Slot
+						}
+						slotNames = append(slotNames, name)
+					}
 				}
-				slotNames = append(slotNames, name)
-			}
-		}
+				return nil, nil
+			},
+		)
 	}
 
 	oldSlotPref := config.GetSlotPreference(input.Game.ID)
@@ -124,43 +131,12 @@ func (s *GameOptionsScreen) buildMenuItems(config *internal.Config, game romm.Ro
 
 	if deviceRegistered {
 		saveSlotText := i18n.Localize(&goi18n.Message{ID: "game_options_save_slot", Other: "Save Slot"}, nil)
-		defaultLabel := i18n.Localize(&goi18n.Message{ID: "common_default", Other: "Default"}, nil)
-		newSlotLabel := i18n.Localize(&goi18n.Message{ID: "game_options_new_slot", Other: "New Slot..."}, nil)
-
-		options := make([]gaba.Option, 0, len(slotNames)+2)
-
-		if len(slotNames) == 0 {
-			options = append(options, gaba.Option{DisplayName: defaultLabel, Value: "default"})
-		} else {
-			for _, name := range slotNames {
-				displayName := name
-				if name == "default" {
-					displayName = defaultLabel
-				}
-				options = append(options, gaba.Option{DisplayName: displayName, Value: name})
-			}
-		}
-
-		options = append(options, gaba.Option{
-			DisplayName:    newSlotLabel,
-			Value:          "",
-			Type:           gaba.OptionTypeKeyboard,
-			KeyboardPrompt: "",
-		})
-
-		currentPref := config.GetSlotPreference(game.ID)
-		selectedIdx := 0
-		for i, opt := range options {
-			if val, ok := opt.Value.(string); ok && val == currentPref {
-				selectedIdx = i
-				break
-			}
-		}
+		slotOpts := BuildSlotOptions(config, game.ID, slotNames)
 
 		items = append(items, gaba.ItemWithOptions{
 			Item:           gaba.MenuItem{Text: saveSlotText},
-			Options:        options,
-			SelectedOption: selectedIdx,
+			Options:        slotOpts.Options,
+			SelectedOption: slotOpts.SelectedIdx,
 		})
 	}
 
@@ -174,6 +150,9 @@ func (s *GameOptionsScreen) applySettings(config *internal.Config, game romm.Rom
 		if item.Item.Text == saveSlotText {
 			if item.SelectedOption >= 0 && item.SelectedOption < len(item.Options) {
 				selectedOpt := item.Options[item.SelectedOption]
+				// Empty string values come from the "New Slot..." keyboard option
+				// when the user dismisses the keyboard without typing. Intentionally
+				// treated as a no-op so the preference remains unchanged.
 				if selectedSlot, ok := selectedOpt.Value.(string); ok && selectedSlot != "" {
 					config.SetSlotPreference(game.ID, selectedSlot)
 				}

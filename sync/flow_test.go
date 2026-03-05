@@ -459,6 +459,45 @@ func TestDetermineActions_WithSlotPreference(t *testing.T) {
 	}
 }
 
+func TestDetermineActions_SlotFallbackForcesUpload(t *testing.T) {
+	// When the preferred slot doesn't exist on the server, DetermineActions
+	// should force an upload with nil RemoteSave so the slot gets created,
+	// rather than comparing against a fallback save from a different slot.
+	remoteUpdated := time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC)
+	// Local file is OLDER than the remote — without fallback detection this
+	// would normally be ActionDownload, which would be wrong.
+	localMtime := remoteUpdated.Add(-1 * time.Hour)
+	path := makeTempSave(t, localMtime)
+
+	localSaves := []LocalSave{
+		{RomID: 1, RomName: "Mario", FilePath: path},
+	}
+
+	// Remote only has "default" slot, but user prefers "quicksave"
+	remoteSaves := map[int][]romm.Save{
+		1: {{ID: 10, RomID: 1, UpdatedAt: remoteUpdated, Slot: ptrStr("default")}},
+	}
+
+	config := &internal.Config{
+		SlotPreferences: map[string]string{"1": "quicksave"},
+	}
+
+	items := DetermineActions(localSaves, remoteSaves, "device-1", config)
+
+	if len(items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(items))
+	}
+	if items[0].Action != ActionUpload {
+		t.Errorf("expected ActionUpload (slot fallback), got %s", items[0].Action)
+	}
+	if items[0].RemoteSave != nil {
+		t.Error("expected nil RemoteSave when falling back to different slot")
+	}
+	if items[0].TargetSlot != "quicksave" {
+		t.Errorf("expected TargetSlot 'quicksave', got %q", items[0].TargetSlot)
+	}
+}
+
 // --- Helper function tests ---
 
 func TestLocalSavesWithoutRemote(t *testing.T) {

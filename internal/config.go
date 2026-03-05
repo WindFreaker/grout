@@ -113,7 +113,7 @@ func LoadConfig() (*Config, error) {
 	config.SlotPreferences = LoadSlotPreferences()
 
 	// Migrate: if config.json still has slot_preferences, move them to save_slots.json
-	if config.SlotPreferences == nil {
+	if len(config.SlotPreferences) == 0 {
 		var raw map[string]json.RawMessage
 		if json.Unmarshal(data, &raw) == nil {
 			if sp, ok := raw["slot_preferences"]; ok {

@@ -108,6 +108,8 @@ func (s *ArtworkSyncScreen) draw(input ArtworkSyncInput) {
 	platformCount := len(mappedPlatforms)
 	cm := cache.GetCacheManager()
 
+	// ProcessMessage runs the closure synchronously on the calling goroutine,
+	// so mutating platformResults from within the closure is safe.
 	for i, platform := range mappedPlatforms {
 		p := platform
 		gaba.ProcessMessage(

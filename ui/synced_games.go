@@ -28,9 +28,13 @@ type SyncedGamesOutput struct {
 	NewSlotRomID int    // ROM ID to upload saves for
 }
 
-type SyncedGamesScreen struct {
-	newSlotName  string
-	newSlotRomID int
+type SyncedGamesScreen struct{}
+
+// slotChangeResult is returned by showPlatformGames/showGameDetail when a
+// slot change triggers a sync. A nil result means no sync was triggered.
+type slotChangeResult struct {
+	SlotName string
+	RomID    int
 }
 
 func NewSyncedGamesScreen() *SyncedGamesScreen {
@@ -155,10 +159,10 @@ func (s *SyncedGamesScreen) Draw(input SyncedGamesInput) (SyncedGamesOutput, err
 			platformVisibleStart = max(0, sel.Selected[0]-sel.VisiblePosition)
 
 			group := groups[platformIndex]
-			if s.showPlatformGames(client, input.Config, group.Name, group.Games) {
+			if result := s.showPlatformGames(client, input.Config, group.Name, group.Games); result != nil {
 				output.Action = SyncedGamesActionSyncNow
-				output.NewSlotName = s.newSlotName
-				output.NewSlotRomID = s.newSlotRomID
+				output.NewSlotName = result.SlotName
+				output.NewSlotRomID = result.RomID
 				return output, nil
 			}
 			continue
@@ -168,7 +172,7 @@ func (s *SyncedGamesScreen) Draw(input SyncedGamesInput) (SyncedGamesOutput, err
 	}
 }
 
-func (s *SyncedGamesScreen) showPlatformGames(client *romm.Client, config *internal.Config, platformName string, games []romm.Rom) bool {
+func (s *SyncedGamesScreen) showPlatformGames(client *romm.Client, config *internal.Config, platformName string, games []romm.Rom) *slotChangeResult {
 	menuItems := make([]gaba.MenuItem, len(games))
 	for i, game := range games {
 		menuItems[i] = gaba.MenuItem{
@@ -189,7 +193,7 @@ func (s *SyncedGamesScreen) showPlatformGames(client *romm.Client, config *inter
 
 		sel, err := gaba.List(options)
 		if err != nil {
-			return false
+			return nil
 		}
 
 		if sel.Action == gaba.ListActionSelected {
@@ -197,17 +201,17 @@ func (s *SyncedGamesScreen) showPlatformGames(client *romm.Client, config *inter
 			visibleStart = max(0, sel.Selected[0]-sel.VisiblePosition)
 
 			romID := menuItems[selectedIndex].Metadata.(int)
-			if s.showGameDetail(client, config, romID, menuItems[selectedIndex].Text) {
-				return true
+			if result := s.showGameDetail(client, config, romID, menuItems[selectedIndex].Text); result != nil {
+				return result
 			}
 			continue
 		}
 
-		return false
+		return nil
 	}
 }
 
-func (s *SyncedGamesScreen) showGameDetail(client *romm.Client, config *internal.Config, romID int, gameName string) bool {
+func (s *SyncedGamesScreen) showGameDetail(client *romm.Client, config *internal.Config, romID int, gameName string) *slotChangeResult {
 	var summary romm.SaveSummary
 	var fetchErr error
 	gaba.ProcessMessage(
@@ -225,7 +229,7 @@ func (s *SyncedGamesScreen) showGameDetail(client *romm.Client, config *internal
 			ContinueFooter(),
 			gaba.MessageOptions{},
 		)
-		return false
+		return nil
 	}
 
 	oldSlotPref := config.GetSlotPreference(romID)
@@ -249,7 +253,7 @@ func (s *SyncedGamesScreen) showGameDetail(client *romm.Client, config *internal
 
 		result, err := gaba.DetailScreen(gameName, opts, footerItems)
 		if err != nil {
-			return false
+			return nil
 		}
 
 		if result.Action == gaba.DetailActionTriggered {
@@ -257,6 +261,7 @@ func (s *SyncedGamesScreen) showGameDetail(client *romm.Client, config *internal
 				newSlotPref := config.GetSlotPreference(romID)
 				if newSlotPref != oldSlotPref {
 					// Check if this is a brand-new slot for targeted upload
+					r := &slotChangeResult{RomID: romID}
 					isNewSlot := true
 					for _, slot := range summary.Slots {
 						name := "default"
@@ -269,23 +274,20 @@ func (s *SyncedGamesScreen) showGameDetail(client *romm.Client, config *internal
 						}
 					}
 					if isNewSlot {
-						s.newSlotName = newSlotPref
-						s.newSlotRomID = romID
+						r.SlotName = newSlotPref
 					}
-					return true
+					return r
 				}
 			}
 			continue
 		}
 
-		return false
+		return nil
 	}
 }
 
 func (s *SyncedGamesScreen) showSlotSelector(config *internal.Config, romID int, summary romm.SaveSummary) bool {
 	saveSlotText := i18n.Localize(&goi18n.Message{ID: "game_options_save_slot", Other: "Save Slot"}, nil)
-	defaultLabel := i18n.Localize(&goi18n.Message{ID: "common_default", Other: "Default"}, nil)
-	newSlotLabel := i18n.Localize(&goi18n.Message{ID: "game_options_new_slot", Other: "New Slot..."}, nil)
 
 	var slotNames []string
 	for _, slot := range summary.Slots {
@@ -296,38 +298,12 @@ func (s *SyncedGamesScreen) showSlotSelector(config *internal.Config, romID int,
 		slotNames = append(slotNames, name)
 	}
 
-	options := make([]gaba.Option, 0, len(slotNames)+2)
-	if len(slotNames) == 0 {
-		options = append(options, gaba.Option{DisplayName: defaultLabel, Value: "default"})
-	} else {
-		for _, name := range slotNames {
-			displayName := name
-			if name == "default" {
-				displayName = defaultLabel
-			}
-			options = append(options, gaba.Option{DisplayName: displayName, Value: name})
-		}
-	}
-	options = append(options, gaba.Option{
-		DisplayName:    newSlotLabel,
-		Value:          "",
-		Type:           gaba.OptionTypeKeyboard,
-		KeyboardPrompt: "",
-	})
-
-	currentPref := config.GetSlotPreference(romID)
-	selectedIdx := 0
-	for i, opt := range options {
-		if val, ok := opt.Value.(string); ok && val == currentPref {
-			selectedIdx = i
-			break
-		}
-	}
+	slotOpts := BuildSlotOptions(config, romID, slotNames)
 
 	items := []gaba.ItemWithOptions{{
 		Item:           gaba.MenuItem{Text: saveSlotText},
-		Options:        options,
-		SelectedOption: selectedIdx,
+		Options:        slotOpts.Options,
+		SelectedOption: slotOpts.SelectedIdx,
 	}}
 
 	result, err := gaba.OptionsList(

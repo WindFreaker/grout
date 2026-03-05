@@ -185,6 +185,8 @@ func transitionSyncedGames(ctx *transitionContext, result any) (router.Screen, a
 	}
 
 	if r.Action == ui.SyncedGamesActionSyncNow {
+		// Resume data is nil because SyncedGamesScreen doesn't track scroll position
+		// externally — it manages its own navigation loops internally.
 		ctx.stack.Push(ScreenSyncedGames, ui.SyncedGamesInput{
 			Config:    ctx.state.Config,
 			Host:      ctx.state.Host,

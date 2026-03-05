@@ -507,9 +507,7 @@ func upload(client *romm.Client, deviceID string, item *SyncItem) bool {
 		logger.Warn("Failed to set save file mtime after upload", "path", item.LocalSave.FilePath, "error", err)
 	}
 
-	// Mark this device as synced for the uploaded save so that subsequent
-	// syncs see IsCurrent=true in DeviceSyncs and correctly skip.
-	if err := client.ConfirmSaveDownloaded(uploadedSave.ID, deviceID); err != nil {
+	if err := client.MarkDeviceSynced(uploadedSave.ID, deviceID); err != nil {
 		logger.Warn("Failed to confirm upload sync state", "saveID", uploadedSave.ID, "error", err)
 	}
 
@@ -586,7 +584,7 @@ func download(client *romm.Client, config *internal.Config, deviceID string, ite
 		logger.Warn("Failed to set save file mtime", "path", savePath, "error", err)
 	}
 
-	if err := client.ConfirmSaveDownloaded(item.RemoteSave.ID, deviceID); err != nil {
+	if err := client.MarkDeviceSynced(item.RemoteSave.ID, deviceID); err != nil {
 		logger.Warn("Failed to confirm save download", "saveID", item.RemoteSave.ID, "error", err)
 	}
 
@@ -676,6 +674,7 @@ func DiscoverRemoteSaves(client *romm.Client, config *internal.Config, localSave
 				RomFileName: rom.FileName,
 			},
 			RemoteSave: remoteSave,
+			TargetSlot: preferredSlot,
 			Action:     ActionDownload,
 		}
 

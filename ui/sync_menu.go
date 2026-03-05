@@ -38,21 +38,23 @@ func (s *SyncMenuScreen) Draw(input SyncMenuInput) (SyncMenuOutput, error) {
 		Host:   input.Host,
 	}
 
-	syncNowText := i18n.Localize(&goi18n.Message{ID: "sync_menu_sync_now", Other: "Sync Now"}, nil)
-	syncedGamesText := i18n.Localize(&goi18n.Message{ID: "sync_menu_synced_games", Other: "Synced Games"}, nil)
-	historyText := i18n.Localize(&goi18n.Message{ID: "sync_menu_history", Other: "View History"}, nil)
+	const (
+		menuSyncNow = iota
+		menuSyncedGames
+		menuHistory
+	)
 
 	items := []gaba.ItemWithOptions{
 		{
-			Item:    gaba.MenuItem{Text: syncNowText},
+			Item:    gaba.MenuItem{Text: i18n.Localize(&goi18n.Message{ID: "sync_menu_sync_now", Other: "Sync Now"}, nil)},
 			Options: []gaba.Option{{Type: gaba.OptionTypeClickable}},
 		},
 		{
-			Item:    gaba.MenuItem{Text: syncedGamesText},
+			Item:    gaba.MenuItem{Text: i18n.Localize(&goi18n.Message{ID: "sync_menu_synced_games", Other: "Synced Games"}, nil)},
 			Options: []gaba.Option{{Type: gaba.OptionTypeClickable}},
 		},
 		{
-			Item:    gaba.MenuItem{Text: historyText},
+			Item:    gaba.MenuItem{Text: i18n.Localize(&goi18n.Message{ID: "sync_menu_history", Other: "View History"}, nil)},
 			Options: []gaba.Option{{Type: gaba.OptionTypeClickable}},
 		},
 	}
@@ -80,21 +82,13 @@ func (s *SyncMenuScreen) Draw(input SyncMenuInput) (SyncMenuOutput, error) {
 	output.LastVisibleStartIndex = result.VisibleStartIndex
 
 	if result.Action == gaba.ListActionSelected {
-		selectedText := items[result.Selected].Item.Text
-
-		if selectedText == syncNowText {
+		switch result.Selected {
+		case menuSyncNow:
 			output.Action = SyncMenuActionSyncNow
-			return output, nil
-		}
-
-		if selectedText == syncedGamesText {
+		case menuSyncedGames:
 			output.Action = SyncMenuActionSyncedGames
-			return output, nil
-		}
-
-		if selectedText == historyText {
+		case menuHistory:
 			output.Action = SyncMenuActionHistory
-			return output, nil
 		}
 	}
 
