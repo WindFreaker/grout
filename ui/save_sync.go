@@ -268,7 +268,9 @@ func (s *SaveSyncScreen) resolveMultiSlotDownloads(config *internal.Config, item
 		}
 	}
 
-	internal.SaveSlotPreferences(config)
+	if err := internal.SaveSlotPreferences(config); err != nil {
+		gaba.GetLogger().Warn("Failed to save slot preferences", "error", err)
+	}
 	return items
 }
 
