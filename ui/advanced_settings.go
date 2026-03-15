@@ -143,14 +143,6 @@ func (s *AdvancedSettingsScreen) buildMenuItems(config *internal.Config) []gaba.
 			SelectedOption: s.findApiTimeoutIndex(config.ApiTimeout),
 		},
 		{
-			Item: gaba.MenuItem{Text: i18n.Localize(&goi18n.Message{ID: "settings_kid_mode", Other: "Kid Mode"}, nil)},
-			Options: []gaba.Option{
-				{DisplayName: i18n.Localize(&goi18n.Message{ID: "option_disabled", Other: "Disabled"}, nil), Value: false},
-				{DisplayName: i18n.Localize(&goi18n.Message{ID: "option_enabled", Other: "Enabled"}, nil), Value: true},
-			},
-			SelectedOption: boolToIndex(config.KidMode),
-		},
-		{
 			Item:    gaba.MenuItem{Text: i18n.Localize(&goi18n.Message{ID: "settings_server_address", Other: "Server Address"}, nil)},
 			Options: []gaba.Option{{Type: gaba.OptionTypeClickable}},
 		},
@@ -200,11 +192,6 @@ func (s *AdvancedSettingsScreen) applySettings(config *internal.Config, items []
 				config.ReleaseChannel = val
 			}
 
-		case i18n.Localize(&goi18n.Message{ID: "settings_kid_mode", Other: "Kid Mode"}, nil):
-			if val, ok := item.Options[item.SelectedOption].Value.(bool); ok {
-				config.KidMode = val
-				internal.SetKidMode(val)
-			}
 		}
 	}
 }

@@ -45,6 +45,7 @@ const (
 	SettingGeneralSettings     SettingType = "general_settings"
 	SettingCollectionsSettings SettingType = "collections_settings"
 	SettingDirectoryMappings   SettingType = "directory_mappings"
+	SettingToolsSettings       SettingType = "tools_settings"
 	SettingAdvancedSettings    SettingType = "advanced_settings"
 	SettingInfo                SettingType = "info"
 	SettingCheckUpdates        SettingType = "check_updates"
@@ -56,6 +57,7 @@ var settingsOrder = []SettingType{
 	SettingCollectionsSettings,
 	SettingDirectoryMappings,
 	SettingSaveSync,
+	SettingToolsSettings,
 	SettingAdvancedSettings,
 	SettingInfo,
 	SettingCheckUpdates,
@@ -119,6 +121,11 @@ func (s *SettingsScreen) Draw(input SettingsInput) (SettingsOutput, error) {
 			return output, nil
 		}
 
+		if selectedText == i18n.Localize(&goi18n.Message{ID: "settings_tools", Other: "Tools"}, nil) {
+			output.Action = SettingsActionTools
+			return output, nil
+		}
+
 		if selectedText == i18n.Localize(&goi18n.Message{ID: "settings_advanced", Other: "Advanced"}, nil) {
 			output.AdvancedSettingsClicked = true
 			output.Action = SettingsActionAdvanced
@@ -167,6 +174,12 @@ func (s *SettingsScreen) buildMenuItem(settingType SettingType) gaba.ItemWithOpt
 	case SettingDirectoryMappings:
 		return gaba.ItemWithOptions{
 			Item:    gaba.MenuItem{Text: i18n.Localize(&goi18n.Message{ID: "settings_edit_mappings", Other: "Directory Mappings"}, nil)},
+			Options: []gaba.Option{{Type: gaba.OptionTypeClickable}},
+		}
+
+	case SettingToolsSettings:
+		return gaba.ItemWithOptions{
+			Item:    gaba.MenuItem{Text: i18n.Localize(&goi18n.Message{ID: "settings_tools", Other: "Tools"}, nil)},
 			Options: []gaba.Option{{Type: gaba.OptionTypeClickable}},
 		}
 

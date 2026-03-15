@@ -177,7 +177,7 @@ func registerScreens(r *router.Router, state *AppState) {
 	r.Register(ScreenArtworkSync, func(input any) (any, error) {
 		in := input.(ui.ArtworkSyncInput)
 		screen := ui.NewArtworkSyncScreen()
-		screen.Execute(in.Config, in.Host)
+		screen.Execute(in)
 		return ui.ArtworkSyncOutput{}, nil
 	})
 
@@ -226,6 +226,11 @@ func registerScreens(r *router.Router, state *AppState) {
 	r.Register(ScreenSaveMapping, func(input any) (any, error) {
 		screen := ui.NewSaveMappingScreen()
 		return screen.Draw(input.(ui.SaveMappingInput))
+	})
+
+	r.Register(ScreenToolsSettings, func(input any) (any, error) {
+		screen := ui.NewToolsSettingsScreen()
+		return screen.Draw(input.(ui.ToolsSettingsInput))
 	})
 
 	r.Register(ScreenServerAddress, func(input any) (any, error) {

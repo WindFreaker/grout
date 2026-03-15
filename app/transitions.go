@@ -56,6 +56,8 @@ func buildTransitionFunc(state *AppState, quitOnBack bool, initialShowCollection
 			return transitionGeneralSettings(ctx, result)
 		case ScreenCollectionsSettings:
 			return transitionCollectionsSettings(ctx, result)
+		case ScreenToolsSettings:
+			return transitionToolsSettings(ctx, result)
 		case ScreenAdvancedSettings:
 			return transitionAdvancedSettings(ctx, result)
 		case ScreenPlatformMapping:
@@ -616,6 +618,10 @@ func transitionSettings(ctx *transitionContext, result any) (router.Screen, any)
 		ctx.stack.Push(ScreenSettings, pushInput, r)
 		return ScreenCollectionsSettings, ui.CollectionsSettingsInput{Config: ctx.state.Config}
 
+	case ui.SettingsActionTools:
+		ctx.stack.Push(ScreenSettings, pushInput, r)
+		return ScreenToolsSettings, ui.ToolsSettingsInput{Config: ctx.state.Config, Host: ctx.state.Host}
+
 	case ui.SettingsActionAdvanced:
 		ctx.stack.Push(ScreenSettings, pushInput, r)
 		return ScreenAdvancedSettings, ui.AdvancedSettingsInput{Config: ctx.state.Config, Host: ctx.state.Host}
@@ -687,6 +693,25 @@ func transitionCollectionsSettings(ctx *transitionContext, result any) (router.S
 		ctx.showCollections = ctx.state.Config.ShowCollections(ctx.state.Host)
 	}
 	return popOrExit(ctx.stack)
+}
+
+func transitionToolsSettings(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.ToolsSettingsOutput)
+
+	pushInput := ui.ToolsSettingsInput{Config: ctx.state.Config, Host: ctx.state.Host}
+
+	switch r.Action {
+	case ui.ToolsSettingsActionSyncLocalArtwork:
+		ctx.stack.Push(ScreenToolsSettings, pushInput, r)
+		return ScreenArtworkSync, ui.ArtworkSyncInput{
+			Config:         *ctx.state.Config,
+			Host:           ctx.state.Host,
+			DownloadedOnly: true,
+		}
+
+	default:
+		return popOrExit(ctx.stack)
+	}
 }
 
 func transitionAdvancedSettings(ctx *transitionContext, result any) (router.Screen, any) {
