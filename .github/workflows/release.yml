@@ -83,6 +83,9 @@ jobs:
       - name: Build and Package (32-bit)
         run: task build-32 extract-32 package-allium package-onion
 
+      - name: Rename ARM32 binary for release
+        run: cp build32/grout build32/grout-arm32
+
       - name: Create NextUI distribution
         run: |
           cd dist/Grout.pak
@@ -152,5 +155,6 @@ jobs:
             dist/Grout-Trimui.zip
             dist/Grout-Batocera.zip
             build64/grout
+            build32/grout-arm32
           draft: false
           prerelease: ${{ inputs.beta }}
