@@ -1,6 +1,6 @@
 # Installation Guide for ROCKNIX
 
-This guide will help you install Grout on devices running [ROCKNIX](https://rocknix.org).
+This guide will help you install Grout on devices running [ROCKNIX][rocknix].
 
 ## Tested Devices
 
@@ -8,8 +8,11 @@ Grout has been tested on the following devices running ROCKNIX:
 
 | Manufacturer | Device   |
 |--------------|----------|
+| Anbernic     | RG34XX   |
 | Anbernic     | RG35XXSP |
+| Anbernic     | RG DS    |
 | Retroid      | Flip 2   |
+| Powkiddy     | RGB30    |
 
 _Please help verify compatibility on other devices by reporting your results!_
 
@@ -47,3 +50,5 @@ file if you do not want to authenticate again, and configure platforms folder ma
 ## Next Steps
 
 After installation is complete, check out the [User Guide](../usage/guide.md) to learn how to use Grout.
+
+--8<-- "docs/_includes/cfw-links.md"

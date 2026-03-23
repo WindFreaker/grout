@@ -18,12 +18,15 @@ import (
 )
 
 var cfwMapping = map[string]string{
-	"KNULLI":  "knulli",
-	"MUOS":    "muos",
-	"NEXTUI":  "nextui",
-	"ROCKNIX": "rocknix",
-	"SPRUCE":  "spruce",
-	"TRIMUI":  "trimui",
+	"ALLIUM":   "allium",
+	"BATOCERA": "batocera",
+	"KNULLI":   "knulli",
+	"MUOS":     "muos",
+	"NEXTUI":   "nextui",
+	"ONION":    "onion",
+	"ROCKNIX":  "rocknix",
+	"SPRUCE":   "spruce",
+	"TRIMUI":   "trimui",
 }
 
 func main() {
@@ -33,7 +36,7 @@ func main() {
 		arg := strings.ToUpper(os.Args[1])
 		if _, ok := cfwMapping[arg]; !ok {
 			fmt.Fprintf(os.Stderr, "Unknown CFW: %s\n", os.Args[1])
-			fmt.Fprintf(os.Stderr, "Valid options: knulli, muos, nextui, rocknix, spruce, trimui\n")
+			fmt.Fprintf(os.Stderr, "Valid options: allium, batocera, knulli, muos, nextui, onion, rocknix, spruce, trimui\n")
 			os.Exit(1)
 		}
 		targets = []string{arg}

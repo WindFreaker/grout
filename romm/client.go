@@ -20,8 +20,7 @@ const (
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
-	username   string
-	password   string
+	authHeader string
 }
 
 type queryParam interface {
@@ -36,10 +35,9 @@ func WithTimeout(timeout time.Duration) ClientOption {
 	}
 }
 
-func WithBasicAuth(username, password string) ClientOption {
+func WithAuthHeader(header string) ClientOption {
 	return func(c *Client) {
-		c.username = username
-		c.password = password
+		c.authHeader = header
 	}
 }
 
@@ -70,7 +68,7 @@ func NewClient(baseURL string, opts ...ClientOption) *Client {
 
 func NewClientFromHost(host Host, timeout ...time.Duration) *Client {
 	opts := []ClientOption{
-		WithBasicAuth(host.Username, host.Password),
+		WithAuthHeader(host.AuthHeader()),
 		WithInsecureSkipVerify(host.InsecureSkipVerify),
 	}
 	if len(timeout) > 0 {
@@ -107,8 +105,8 @@ func (c *Client) doRequest(method string, path string, queryParams queryParam, b
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	if c.username != "" && c.password != "" {
-		req.SetBasicAuth(c.username, c.password)
+	if c.authHeader != "" {
+		req.Header.Set("Authorization", c.authHeader)
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -152,8 +150,45 @@ func (c *Client) doRequestRaw(method, path string, body interface{}) ([]byte, er
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	if c.username != "" && c.password != "" {
-		req.SetBasicAuth(c.username, c.password)
+	if c.authHeader != "" {
+		req.Header.Set("Authorization", c.authHeader)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	return bodyBytes, nil
+}
+
+func (c *Client) doRequestRawWithQuery(method, path string, queryParams queryParam) ([]byte, error) {
+	fullURL := c.baseURL + path
+
+	req, err := http.NewRequest(method, fullURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	if queryParams != nil && queryParams.Valid() {
+		values, err := qs.NewEncoder().Values(queryParams)
+		if err == nil {
+			req.URL.RawQuery = values.Encode()
+		}
+	}
+
+	if c.authHeader != "" {
+		req.Header.Set("Authorization", c.authHeader)
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -183,8 +218,8 @@ func (c *Client) doMultipartRequest(method, path string, queryParams queryParam,
 
 	req.Header.Set("Content-Type", contentType)
 
-	if c.username != "" && c.password != "" {
-		req.SetBasicAuth(c.username, c.password)
+	if c.authHeader != "" {
+		req.Header.Set("Authorization", c.authHeader)
 	}
 
 	if queryParams != nil && queryParams.Valid() {
@@ -200,6 +235,11 @@ func (c *Client) doMultipartRequest(method, path string, queryParams queryParam,
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusConflict {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return parseConflictError(bodyBytes)
+	}
+
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(bodyBytes))
@@ -212,4 +252,27 @@ func (c *Client) doMultipartRequest(method, path string, queryParams queryParam,
 	}
 
 	return nil
+}
+
+// parseConflictError attempts to parse a 409 response body into a ConflictError.
+func parseConflictError(body []byte) error {
+	// Try parsing as a direct ConflictError
+	var conflict ConflictError
+	if err := json.Unmarshal(body, &conflict); err == nil && conflict.ErrorType != "" {
+		return &conflict
+	}
+
+	// Try parsing as {"detail": {...}} wrapper (FastAPI style)
+	var wrapper struct {
+		Detail ConflictError `json:"detail"`
+	}
+	if err := json.Unmarshal(body, &wrapper); err == nil && wrapper.Detail.ErrorType != "" {
+		return &wrapper.Detail
+	}
+
+	// Fallback: return a generic conflict error
+	return &ConflictError{
+		ErrorType: "conflict",
+		Message:   string(body),
+	}
 }

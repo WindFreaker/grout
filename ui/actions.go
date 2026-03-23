@@ -38,6 +38,7 @@ const (
 	GameOptionsActionSaved GameOptionsAction = iota
 	GameOptionsActionShowQR
 	GameOptionsActionBack
+	GameOptionsActionSyncNow
 )
 
 type SearchAction int
@@ -67,13 +68,15 @@ type SettingsAction int
 
 const (
 	SettingsActionSaved SettingsAction = iota
+	SettingsActionSwitchToToken
 	SettingsActionGeneral
 	SettingsActionCollections
 	SettingsActionAdvanced
+	SettingsActionTools
 	SettingsActionPlatformMapping
-	SettingsActionSaveSync
 	SettingsActionInfo
 	SettingsActionCheckUpdate
+	SettingsActionSaveSync
 	SettingsActionBack
 )
 
@@ -97,7 +100,16 @@ const (
 	AdvancedSettingsActionSaved AdvancedSettingsAction = iota
 	AdvancedSettingsActionRebuildCache
 	AdvancedSettingsActionSyncArtwork
+	AdvancedSettingsActionServerAddress
 	AdvancedSettingsActionBack
+)
+
+type ToolsSettingsAction int
+
+const (
+	ToolsSettingsActionSaved ToolsSettingsAction = iota
+	ToolsSettingsActionSyncLocalArtwork
+	ToolsSettingsActionBack
 )
 
 type PlatformMappingAction int
@@ -105,13 +117,6 @@ type PlatformMappingAction int
 const (
 	PlatformMappingActionSaved PlatformMappingAction = iota
 	PlatformMappingActionBack
-)
-
-type SaveSyncSettingsAction int
-
-const (
-	SaveSyncSettingsActionSaved SaveSyncSettingsAction = iota
-	SaveSyncSettingsActionBack
 )
 
 type InfoAction int
@@ -133,6 +138,49 @@ type GameFiltersAction int
 const (
 	GameFiltersActionApply GameFiltersAction = iota
 	GameFiltersActionCancel
+)
+
+type SaveConflictAction int
+
+const (
+	SaveConflictActionResolved SaveConflictAction = iota
+	SaveConflictActionCancel
+)
+
+type SaveMappingAction int
+
+const (
+	SaveMappingActionSaved SaveMappingAction = iota
+	SaveMappingActionBack
+)
+
+type SyncMenuAction int
+
+const (
+	SyncMenuActionSyncNow SyncMenuAction = iota
+	SyncMenuActionSyncedGames
+	SyncMenuActionHistory
+	SyncMenuActionBack
+)
+
+type SaveSyncSettingsAction int
+
+const (
+	SaveSyncSettingsActionBack SaveSyncSettingsAction = iota
+	SaveSyncSettingsActionSaveMapping
+)
+
+type SyncedGamesAction int
+
+const (
+	SyncedGamesActionBack SyncedGamesAction = iota
+	SyncedGamesActionSyncNow
+)
+
+type SyncHistoryAction int
+
+const (
+	SyncHistoryActionBack SyncHistoryAction = iota
 )
 
 type UpdateCheckAction int

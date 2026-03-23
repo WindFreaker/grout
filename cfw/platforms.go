@@ -2,9 +2,11 @@ package cfw
 
 import (
 	"grout/cfw/allium"
+	"grout/cfw/batocera"
 	"grout/cfw/knulli"
 	"grout/cfw/muos"
 	"grout/cfw/nextui"
+	"grout/cfw/onion"
 	"grout/cfw/rocknix"
 	"grout/cfw/spruce"
 	"grout/cfw/trimui"
@@ -25,6 +27,8 @@ func buildPlatformAliasMap() map[string][]string {
 		spruce.Platforms,
 		trimui.Platforms,
 		allium.Platforms,
+		onion.Platforms,
+		batocera.Platforms,
 	}
 
 	// Build reverse map: primary folder -> list of RomM slugs that use it as primary
@@ -122,6 +126,10 @@ func GetPlatformMap(c CFW) map[string][]string {
 		return trimui.Platforms
 	case Allium:
 		return allium.Platforms
+	case Onion:
+		return onion.Platforms
+	case Batocera:
+		return batocera.Platforms
 	default:
 		return nil
 	}

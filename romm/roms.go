@@ -81,6 +81,8 @@ type Rom struct {
 	UpdatedAt             time.Time      `json:"updated_at,omitempty"`
 	MissingFromFs         bool           `json:"missing_from_fs,omitempty"`
 	Siblings              []any          `json:"siblings,omitempty"`
+	PathVideo             string         `json:"path_video,omitempty"`
+	RAHash                string         `json:"ra_hash,omitempty"`
 	ScreenScraperMetadata ScreenScrapper `json:"ss_metadata,omitempty"`
 }
 
@@ -118,6 +120,7 @@ type RomFile struct {
 	CrcHash       string    `json:"crc_hash,omitempty"`
 	Md5Hash       string    `json:"md5_hash,omitempty"`
 	Sha1Hash      string    `json:"sha1_hash,omitempty"`
+	RAHash        string    `json:"ra_hash,omitempty"`
 	Category      any       `json:"category,omitempty"`
 }
 
@@ -132,6 +135,8 @@ type GetRomsQuery struct {
 	OrderBy             string `qs:"order_by,omitempty"`
 	OrderDir            string `qs:"order_dir,omitempty"`
 	UpdatedAfter        string `qs:"updated_after,omitempty"` // ISO8601 timestamp with timezone
+	WithFilterValues    bool   `qs:"with_filter_values"`
+	WithCharIndex       bool   `qs:"with_char_index"`
 }
 
 func (q GetRomsQuery) Valid() bool {

@@ -4,6 +4,8 @@ import (
 	"grout/cache"
 	"grout/cfw"
 	"grout/internal"
+	"grout/romm"
+	"grout/sync"
 	"grout/ui"
 	"os"
 
@@ -54,28 +56,50 @@ func buildTransitionFunc(state *AppState, quitOnBack bool, initialShowCollection
 			return transitionGeneralSettings(ctx, result)
 		case ScreenCollectionsSettings:
 			return transitionCollectionsSettings(ctx, result)
+		case ScreenToolsSettings:
+			return transitionToolsSettings(ctx, result)
 		case ScreenAdvancedSettings:
 			return transitionAdvancedSettings(ctx, result)
 		case ScreenPlatformMapping:
 			return transitionPlatformMapping(ctx, result)
-		case ScreenSaveSyncSettings:
-			return transitionSaveSyncSettings(ctx, result)
 		case ScreenInfo:
 			return transitionInfo(ctx, result)
 		case ScreenLogoutConfirmation:
 			return transitionLogoutConfirmation(ctx, result)
 		case ScreenRebuildCache:
 			return transitionRebuildCache(ctx, result)
-		case ScreenSaveSync:
-			return popOrExit(stack)
 		case ScreenBIOSDownload:
 			return popOrExit(stack)
 		case ScreenArtworkSync:
 			return popOrExit(stack)
+		case ScreenSwitchToToken:
+			// Pop the stacked settings entry so we don't go back to stale state
+			stack.Pop()
+			return ScreenSettings, ui.SettingsInput{
+				Config: ctx.state.Config,
+				CFW:    ctx.state.CFW,
+				Host:   ctx.state.Host,
+			}
 		case ScreenUpdateCheck:
 			return transitionUpdateCheck(ctx, result)
 		case ScreenGameFilters:
 			return transitionGameFilters(ctx, result)
+		case ScreenSaveSync:
+			return transitionSaveSync(ctx, result)
+		case ScreenSaveConflict:
+			return transitionSaveConflict(ctx, result)
+		case ScreenSyncMenu:
+			return transitionSyncMenu(ctx, result)
+		case ScreenSyncedGames:
+			return transitionSyncedGames(ctx, result)
+		case ScreenSyncHistory:
+			return popOrExit(stack)
+		case ScreenSaveSyncSettings:
+			return transitionSaveSyncSettings(ctx, result)
+		case ScreenSaveMapping:
+			return transitionSaveMapping(ctx, result)
+		case ScreenServerAddress:
+			return transitionServerAddress(ctx, result)
 		}
 
 		return router.ScreenExit, nil
@@ -93,7 +117,7 @@ func transitionPlatformSelection(ctx *transitionContext, result any) (router.Scr
 		Platforms:       &ctx.state.Platforms,
 		QuitOnBack:      ctx.quitOnBack,
 		ShowCollections: ctx.showCollections,
-		ShowSaveSync:    computeShowSaveSync(ctx.state),
+		ShowSaveSync:    ctx.state.Host.DeviceID != "",
 	}
 
 	switch r.Action {
@@ -122,7 +146,7 @@ func transitionPlatformSelection(ctx *transitionContext, result any) (router.Scr
 
 	case ui.PlatformSelectionActionSaveSync:
 		ctx.stack.Push(ScreenPlatformSelection, pushInput, r)
-		return ScreenSaveSync, ui.SaveSyncInput{
+		return ScreenSyncMenu, ui.SyncMenuInput{
 			Config: ctx.state.Config,
 			Host:   ctx.state.Host,
 		}
@@ -132,6 +156,164 @@ func transitionPlatformSelection(ctx *transitionContext, result any) (router.Scr
 	}
 
 	return router.ScreenExit, nil
+}
+
+func transitionSyncMenu(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.SyncMenuOutput)
+
+	pushInput := ui.SyncMenuInput{
+		Config: ctx.state.Config,
+		Host:   ctx.state.Host,
+	}
+
+	switch r.Action {
+	case ui.SyncMenuActionSyncNow:
+		ctx.stack.Push(ScreenSyncMenu, pushInput, r)
+		return ScreenSaveSync, ui.SaveSyncInput{
+			Config: ctx.state.Config,
+			Host:   ctx.state.Host,
+		}
+
+	case ui.SyncMenuActionSyncedGames:
+		ctx.stack.Push(ScreenSyncMenu, pushInput, r)
+		return ScreenSyncedGames, ui.SyncedGamesInput{
+			Config:    ctx.state.Config,
+			Host:      ctx.state.Host,
+			Platforms: &ctx.state.Platforms,
+			DeviceID:  ctx.state.Host.DeviceID,
+		}
+
+	case ui.SyncMenuActionHistory:
+		ctx.stack.Push(ScreenSyncMenu, pushInput, r)
+		return ScreenSyncHistory, ui.SyncHistoryInput{
+			DeviceID: ctx.state.Host.DeviceID,
+		}
+
+	case ui.SyncMenuActionBack:
+		return popOrExit(ctx.stack)
+	}
+
+	return router.ScreenExit, nil
+}
+
+func transitionSaveMapping(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.SaveMappingOutput)
+	if r.Config != nil {
+		ctx.state.Config = r.Config
+		if r.Action == ui.SaveMappingActionSaved {
+			internal.SaveConfig(r.Config)
+		}
+	}
+	return popOrExit(ctx.stack)
+}
+
+func transitionSyncedGames(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.SyncedGamesOutput)
+	if r.Config != nil {
+		ctx.state.Config = r.Config
+	}
+
+	if r.Action == ui.SyncedGamesActionSyncNow {
+		// Resume data is nil because SyncedGamesScreen doesn't track scroll position
+		// externally — it manages its own navigation loops internally.
+		ctx.stack.Push(ScreenSyncedGames, ui.SyncedGamesInput{
+			Config:    ctx.state.Config,
+			Host:      ctx.state.Host,
+			Platforms: &ctx.state.Platforms,
+			DeviceID:  ctx.state.Host.DeviceID,
+		}, nil)
+		syncInput := ui.SaveSyncInput{
+			Config: ctx.state.Config,
+			Host:   ctx.state.Host,
+		}
+		if r.NewSlotName != "" {
+			syncInput.NewSlotName = r.NewSlotName
+			syncInput.NewSlotRomID = r.NewSlotRomID
+		}
+		return ScreenSaveSync, syncInput
+	}
+
+	return popOrExit(ctx.stack)
+}
+
+func transitionSaveSyncSettings(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.SaveSyncSettingsOutput)
+	needsSave := false
+
+	if r.Host.DeviceID != "" && r.Host.DeviceID != ctx.state.Host.DeviceID {
+		ctx.state.Host.DeviceID = r.Host.DeviceID
+		needsSave = true
+	}
+	if r.Host.DeviceName != ctx.state.Host.DeviceName {
+		ctx.state.Host.DeviceName = r.Host.DeviceName
+		needsSave = true
+	}
+	if r.Config.SaveBackupLimit != ctx.state.Config.SaveBackupLimit {
+		ctx.state.Config.SaveBackupLimit = r.Config.SaveBackupLimit
+		needsSave = true
+	}
+
+	if needsSave {
+		if len(ctx.state.Config.Hosts) > 0 {
+			ctx.state.Config.Hosts[0] = ctx.state.Host
+		} else {
+			ctx.state.Config.Hosts = []romm.Host{ctx.state.Host}
+		}
+		internal.SaveConfig(ctx.state.Config)
+	}
+
+	if r.Action == ui.SaveSyncSettingsActionSaveMapping {
+		ctx.stack.Push(ScreenSaveSyncSettings, ui.SaveSyncSettingsInput{
+			Config: ctx.state.Config,
+			Host:   ctx.state.Host,
+		}, nil)
+		return ScreenSaveMapping, ui.SaveMappingInput{
+			Config: ctx.state.Config,
+		}
+	}
+
+	return popOrExit(ctx.stack)
+}
+
+func transitionSaveSync(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.SaveSyncOutput)
+	if !r.NeedsConflictResolution {
+		return popOrExit(ctx.stack)
+	}
+
+	// Extract conflict items for the conflict screen
+	var conflicts []sync.SyncItem
+	for _, item := range r.Items {
+		if item.Action == sync.ActionConflict {
+			conflicts = append(conflicts, item)
+		}
+	}
+
+	return ScreenSaveConflict, ui.SaveConflictInput{
+		Items:           conflicts,
+		AllItems:        r.Items,
+		ConflictIndices: r.ConflictIndices,
+	}
+}
+
+func transitionSaveConflict(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.SaveConflictOutput)
+
+	if r.Action != ui.SaveConflictActionResolved {
+		return popOrExit(ctx.stack)
+	}
+
+	for ci, resolved := range r.Items {
+		if idx, ok := r.ConflictIndices[ci]; ok && idx < len(r.AllItems) {
+			r.AllItems[idx] = resolved
+		}
+	}
+
+	return ScreenSaveSync, ui.SaveSyncInput{
+		Config:        ctx.state.Config,
+		Host:          ctx.state.Host,
+		ResolvedItems: r.AllItems,
+	}
 }
 
 func transitionGameList(ctx *transitionContext, result any) (router.Screen, any) {
@@ -153,7 +335,7 @@ func transitionGameList(ctx *transitionContext, result any) (router.Screen, any)
 	case ui.GameListActionSelected:
 		if len(r.SelectedGames) > 1 {
 			executeMultiDownloadUI(ctx.state, r)
-			triggerAutoSyncRouter(ctx.state)
+
 			return ScreenGameList, ui.GameListInput{
 				Config:               ctx.state.Config,
 				Host:                 ctx.state.Host,
@@ -293,7 +475,7 @@ func transitionGameDetails(ctx *transitionContext, result any) (router.Screen, a
 	switch r.Action {
 	case ui.GameDetailsActionDownload:
 		executeDownloadUI(ctx.state, r, ctx.stack)
-		triggerAutoSyncRouter(ctx.state)
+
 		return popOrExit(ctx.stack)
 
 	case ui.GameDetailsActionOptions:
@@ -332,6 +514,23 @@ func transitionGameOptions(ctx *transitionContext, result any) (router.Screen, a
 			Host: r.Host,
 			Game: r.Game,
 		}
+	}
+
+	if r.Action == ui.GameOptionsActionSyncNow {
+		ctx.stack.Push(ScreenGameOptions, ui.GameOptionsInput{
+			Config: ctx.state.Config,
+			Host:   r.Host,
+			Game:   r.Game,
+		}, nil)
+		syncInput := ui.SaveSyncInput{
+			Config: ctx.state.Config,
+			Host:   r.Host,
+		}
+		if r.NewSlotName != "" {
+			syncInput.NewSlotName = r.NewSlotName
+			syncInput.NewSlotRomID = r.Game.ID
+		}
+		return ScreenSaveSync, syncInput
 	}
 
 	return popOrExit(ctx.stack)
@@ -414,7 +613,6 @@ func transitionSettings(ctx *transitionContext, result any) (router.Screen, any)
 	if r.Config != nil {
 		ctx.state.Config = r.Config
 		internal.SaveConfig(ctx.state.Config)
-		ctx.showCollections = ctx.state.Config.ShowCollections(ctx.state.Host)
 	}
 
 	pushInput := ui.SettingsInput{Config: ctx.state.Config, CFW: ctx.state.CFW, Host: ctx.state.Host}
@@ -428,6 +626,14 @@ func transitionSettings(ctx *transitionContext, result any) (router.Screen, any)
 		ctx.stack.Push(ScreenSettings, pushInput, r)
 		return ScreenCollectionsSettings, ui.CollectionsSettingsInput{Config: ctx.state.Config}
 
+	case ui.SettingsActionSwitchToToken:
+		ctx.stack.Push(ScreenSettings, pushInput, r)
+		return ScreenSwitchToToken, nil
+
+	case ui.SettingsActionTools:
+		ctx.stack.Push(ScreenSettings, pushInput, r)
+		return ScreenToolsSettings, ui.ToolsSettingsInput{Config: ctx.state.Config, Host: ctx.state.Host}
+
 	case ui.SettingsActionAdvanced:
 		ctx.stack.Push(ScreenSettings, pushInput, r)
 		return ScreenAdvancedSettings, ui.AdvancedSettingsInput{Config: ctx.state.Config, Host: ctx.state.Host}
@@ -436,16 +642,12 @@ func transitionSettings(ctx *transitionContext, result any) (router.Screen, any)
 		ctx.stack.Push(ScreenSettings, pushInput, r)
 		return ScreenPlatformMapping, ui.PlatformMappingInput{
 			Host:             ctx.state.Host,
-			ApiTimeout:       ctx.state.Config.ApiTimeout,
+			ApiTimeout:       ctx.state.Config.ApiTimeout.Duration(),
 			CFW:              ctx.state.CFW,
 			RomDirectory:     cfw.GetRomDirectory(),
 			ExistingMappings: ctx.state.Config.DirectoryMappings,
 			PlatformsBinding: ctx.state.Config.PlatformsBinding,
 		}
-
-	case ui.SettingsActionSaveSync:
-		ctx.stack.Push(ScreenSettings, pushInput, r)
-		return ScreenSaveSyncSettings, ui.SaveSyncSettingsInput{Config: ctx.state.Config, CFW: ctx.state.CFW}
 
 	case ui.SettingsActionInfo:
 		ctx.stack.Push(ScreenSettings, pushInput, r)
@@ -459,8 +661,16 @@ func transitionSettings(ctx *transitionContext, result any) (router.Screen, any)
 			Host:           &ctx.state.Host,
 		}
 
+	case ui.SettingsActionSaveSync:
+		ctx.stack.Push(ScreenSettings, pushInput, r)
+		return ScreenSaveSyncSettings, ui.SaveSyncSettingsInput{
+			Config: ctx.state.Config,
+			Host:   ctx.state.Host,
+		}
+
 	case ui.SettingsActionSaved, ui.SettingsActionBack:
-		return popOrExitWithCollections(ctx.stack, ctx.showCollections)
+		ctx.showCollections = ctx.state.Config.ShowCollections(ctx.state.Host)
+		return popOrExitWithCollections(ctx.stack, ctx.showCollections, ctx.state.Host.DeviceID != "")
 	}
 
 	return router.ScreenExit, nil
@@ -497,6 +707,25 @@ func transitionCollectionsSettings(ctx *transitionContext, result any) (router.S
 	return popOrExit(ctx.stack)
 }
 
+func transitionToolsSettings(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.ToolsSettingsOutput)
+
+	pushInput := ui.ToolsSettingsInput{Config: ctx.state.Config, Host: ctx.state.Host}
+
+	switch r.Action {
+	case ui.ToolsSettingsActionSyncLocalArtwork:
+		ctx.stack.Push(ScreenToolsSettings, pushInput, r)
+		return ScreenArtworkSync, ui.ArtworkSyncInput{
+			Config:         *ctx.state.Config,
+			Host:           ctx.state.Host,
+			DownloadedOnly: true,
+		}
+
+	default:
+		return popOrExit(ctx.stack)
+	}
+}
+
 func transitionAdvancedSettings(ctx *transitionContext, result any) (router.Screen, any) {
 	r := result.(ui.AdvancedSettingsOutput)
 
@@ -517,6 +746,13 @@ func transitionAdvancedSettings(ctx *transitionContext, result any) (router.Scre
 			Host:   ctx.state.Host,
 		}
 
+	case ui.AdvancedSettingsActionServerAddress:
+		ctx.stack.Push(ScreenAdvancedSettings, pushInput, r)
+		return ScreenServerAddress, ui.ServerAddressInput{
+			Config: ctx.state.Config,
+			Host:   ctx.state.Host,
+		}
+
 	default:
 		if ctx.state.AutoUpdate != nil {
 			ctx.state.AutoUpdate.Recheck(ctx.state.Config.ReleaseChannel)
@@ -525,20 +761,25 @@ func transitionAdvancedSettings(ctx *transitionContext, result any) (router.Scre
 	}
 }
 
+func transitionServerAddress(ctx *transitionContext, result any) (router.Screen, any) {
+	r := result.(ui.ServerAddressOutput)
+
+	if r.Action == ui.ServerAddressActionSaved {
+		ctx.state.Host = r.Host
+		ctx.state.Config.Hosts[0] = r.Host
+		if err := internal.SaveConfig(ctx.state.Config); err != nil {
+			gaba.GetLogger().Error("Failed to save config after server address change", "error", err)
+		}
+	}
+
+	return popOrExit(ctx.stack)
+}
+
 func transitionPlatformMapping(ctx *transitionContext, result any) (router.Screen, any) {
 	r := result.(ui.PlatformMappingOutput)
 	if r.Action == ui.PlatformMappingActionSaved {
 		handlePlatformMappingUpdateUI(ctx.state, r)
 	}
-	return popOrExit(ctx.stack)
-}
-
-func transitionSaveSyncSettings(ctx *transitionContext, result any) (router.Screen, any) {
-	r := result.(ui.SaveSyncSettingsOutput)
-	if r.Config != nil {
-		ctx.state.Config = r.Config
-	}
-	triggerAutoSyncRouter(ctx.state)
 	return popOrExit(ctx.stack)
 }
 
@@ -572,7 +813,7 @@ func transitionLogoutConfirmation(ctx *transitionContext, result any) (router.Sc
 			Platforms:       &ctx.state.Platforms,
 			QuitOnBack:      ctx.quitOnBack,
 			ShowCollections: ctx.state.Config.ShowCollections(ctx.state.Host),
-			ShowSaveSync:    computeShowSaveSync(ctx.state),
+			ShowSaveSync:    ctx.state.Host.DeviceID != "",
 		}
 	}
 	return popOrExit(ctx.stack)
@@ -636,10 +877,13 @@ func transitionGameFilters(ctx *transitionContext, result any) (router.Screen, a
 	return popOrExit(ctx.stack)
 }
 
-func popOrExitWithCollections(stack *router.Stack, showCollections bool) (router.Screen, any) {
+func popOrExitWithCollections(stack *router.Stack, showCollections bool, showSaveSync ...bool) (router.Screen, any) {
 	screen, input := popOrExit(stack)
 	if psInput, ok := input.(ui.PlatformSelectionInput); ok {
 		psInput.ShowCollections = showCollections
+		if len(showSaveSync) > 0 {
+			psInput.ShowSaveSync = showSaveSync[0]
+		}
 		return screen, psInput
 	}
 	return screen, input
@@ -657,9 +901,6 @@ func popOrExit(stack *router.Stack) (router.Screen, any) {
 			output := entry.Resume.(ui.PlatformSelectionOutput)
 			input.LastSelectedIndex = output.LastSelectedIndex
 			input.LastSelectedPosition = output.LastSelectedPosition
-		}
-		if currentAppState != nil {
-			input.ShowSaveSync = computeShowSaveSync(currentAppState)
 		}
 		return entry.Screen, input
 
@@ -698,6 +939,14 @@ func popOrExit(stack *router.Stack) (router.Screen, any) {
 	case ui.AdvancedSettingsInput:
 		if entry.Resume != nil {
 			output := entry.Resume.(ui.AdvancedSettingsOutput)
+			input.LastSelectedIndex = output.LastSelectedIndex
+			input.LastVisibleStartIndex = output.LastVisibleStartIndex
+		}
+		return entry.Screen, input
+
+	case ui.SyncMenuInput:
+		if entry.Resume != nil {
+			output := entry.Resume.(ui.SyncMenuOutput)
 			input.LastSelectedIndex = output.LastSelectedIndex
 			input.LastVisibleStartIndex = output.LastVisibleStartIndex
 		}

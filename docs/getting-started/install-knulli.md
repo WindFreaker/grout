@@ -1,14 +1,16 @@
 # Installation Guide for Knulli
 
-This guide will help you install Grout on devices running [Knulli](https://knulli.org).
+This guide will help you install Grout on devices running [Knulli][knulli].
 
 ## Tested Devices
 
 Grout has been tested on the following devices running Knulli Gladiator II:
 
-| Manufacturer | Device |
-|--------------|--------|
-| Anbernic     | RG34XX |
+| Manufacturer |  Device   |
+|--------------|-----------|
+| Anbernic     | RG34XX    |
+| Anbernic     | RG35XX SP |
+| Trimui       | Smart Pro |
 
 _Please help verify compatibility on other devices by reporting your results!_
 
@@ -46,3 +48,5 @@ file if you do not want to authenticate again, and configure platforms folder ma
 ## Next Steps
 
 After installation is complete, check out the [User Guide](../usage/guide.md) to learn how to use Grout.
+
+--8<-- "docs/_includes/cfw-links.md"

@@ -2,11 +2,15 @@ package cfw
 
 import (
 	"grout/cfw/allium"
+	"grout/cfw/batocera"
 	"grout/cfw/knulli"
 	"grout/cfw/muos"
 	"grout/cfw/nextui"
+	"grout/cfw/onion"
 	"grout/cfw/rocknix"
 	"grout/cfw/spruce"
+	"grout/cfw/trimui"
+	"path/filepath"
 )
 
 // EmulatorFolderMap returns the emulator/save directory mapping for the given CFW.
@@ -24,6 +28,12 @@ func EmulatorFolderMap(c CFW) map[string][]string {
 		return rocknix.Platforms // ROCKNIX stores saves alongside ROMs
 	case Allium:
 		return allium.SaveDirectories
+	case Onion:
+		return onion.SaveDirectories
+	case Trimui:
+		return trimui.SaveDirectories
+	case Batocera:
+		return batocera.Platforms
 	default:
 		return nil
 	}
@@ -36,4 +46,20 @@ func EmulatorFoldersForFSSlug(fsSlug string) []string {
 		return nil
 	}
 	return saveDirectoriesMap[fsSlug]
+}
+
+// GetSaveDirectory returns the full save directory path for a given filesystem slug.
+// Falls back to the first emulator folder if no match is found.
+func GetSaveDirectory(fsSlug string) string {
+	baseSavePath := BaseSavePath()
+	if baseSavePath == "" {
+		return ""
+	}
+
+	emulatorDirs := EmulatorFoldersForFSSlug(fsSlug)
+	if len(emulatorDirs) == 0 {
+		return ""
+	}
+
+	return filepath.Join(baseSavePath, emulatorDirs[0])
 }

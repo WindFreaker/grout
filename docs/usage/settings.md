@@ -3,11 +3,13 @@
 Press `X` from the main menu to access Settings.
 
 !!! important
-    **Kids Mode Impact:** When Kids Mode is enabled, the Settings screen is hidden. To access settings temporarily, press `L1` + `R1` + `Menu` during the Grout splash screen. See [Kids Mode](#kids-mode) for details.
+    **Kid Mode Impact:** When Kid Mode is enabled, the Settings screen is hidden. To access settings temporarily, press `L1` + `R1` + `Menu` during the Grout splash screen. See [Kid Mode](#kid-mode) for details.
 
 ---
 
 ## Main Settings
+
+**Switch to API Token** - Shown only when using password authentication. Initiates the [pairing code flow](guide.md#pairing-code) to switch your connection to token-based authentication.
 
 **General** - Opens a sub-menu for general display and download options.
 See [General Settings](#general-settings) below.
@@ -15,28 +17,19 @@ See [General Settings](#general-settings) below.
 **Collections** - Opens a sub-menu for configuring collection display options.
 See [Collections Settings](#collections-settings) below.
 
-**Directory Mappings** - Change which device directories are mapped to which RomM platforms. This takes you back to
-the platform mapping screen that appeared during setup.
+**Directory Mappings** - Change which device directories are mapped to which RomM platforms.
+See [Directory Mappings](#directory-mappings) below.
 
-**Save Sync** - Controls save synchronization behavior:
+**Save Sync** - Opens a sub-menu for configuring save sync. See [Save Sync Settings](#save-sync-settings) below.
 
-- **Off** - Save sync is completely disabled
-- **Manual** - Save sync is available via the `Y` button from the main menu
-- **Automatic** - Grout automatically syncs saves in the background when you launch the app. A cloud icon in the status
-  bar shows sync progress. If issues are detected, a `Y` button appears to access manual sync.
-
-For complete save sync documentation, see the [Save Sync Guide](save-sync.md).
-
-**Save Sync Settings** - Opens a sub-menu where you can configure the default save directory for each platform. This is
-useful for platforms with multiple emulators (e.g., GBA on muOS), allowing you to set which emulator's save folder
-should be used for syncing. Only visible when Save Sync is enabled. Individual games can override this setting via
-Game Options.
+**Tools** - Opens a sub-menu for artwork management and parental controls. See [Tools](#tools) below.
 
 **Advanced** - Opens a sub-menu for advanced configuration options. See [Advanced Settings](#advanced-settings) below.
 
-**Grout Info** - View version information, build details, server connection info, and the GitHub repository QR code.
+**Grout Info** - View version information, build details, server connection info (including API token name and expiry
+when using token authentication), and the GitHub repository QR code.
 
-**Check for Updates** - Will allow Grout to update itself.
+**Check for Updates** - Check for and install Grout updates.
 
 ---
 
@@ -114,6 +107,86 @@ Controls how collections display their games:
 
 ---
 
+## Directory Mappings
+
+Opens the platform directory mapping screen, which is the same screen shown during initial setup. This lets you change
+which device directories are mapped to which RomM platforms.
+
+For each platform, you can select:
+
+- **Skip** - Don't map this platform. Games from this platform won't be available to download.
+- **Create {Directory Name}** - Create a new directory for this platform. Grout suggests directory names that match your
+  custom firmware's expected structure.
+- **/{Existing Directory}** - Map to an existing directory on your device.
+- **Custom...** - Enter a custom folder name using the on-screen keyboard.
+
+For detailed documentation on platform mapping, see the [User Guide](guide.md#platform-directory-mapping).
+
+### Mappings Reference
+
+Each CFW uses different folder naming conventions:
+
+- [KNULLI](../platforms/knulli.md) - ES-DE style folder names (e.g., `gb`, `snes`, `psx`)
+- [muOS](../platforms/muos.md) - Mixed short codes and descriptive names (e.g., `gb`, `Nintendo Game Boy`)
+- [NextUI](../platforms/nextui.md) - Descriptive names with tags (e.g., `Game Boy (GB)`)
+- [ROCKNIX](../platforms/rocknix.md) - ES-DE style folder names (e.g., `gb`, `snes`, `psx`)
+- [Spruce](../platforms/spruce.md) - Uppercase short codes (e.g., `GB`, `SFC`, `PS`)
+- [Batocera](../platforms/BATOCERA.md) - ES-DE style folder names (e.g., `gb`, `megadrive`, `psx`)
+
+---
+
+## Save Sync Settings
+
+This sub-menu configures save synchronization. For complete save sync documentation, see the [Save Sync Guide](save-sync.md).
+
+### Device Name
+
+Register or rename this device with your RomM server. Each device needs a unique name so RomM can track which saves
+belong to which device. Selecting this opens a keyboard to enter or change the device name.
+
+### Save Sync Mappings
+
+Configure which emulator save directory is used for each platform. This tells Grout where to find and place save files
+on your device. You can override per-game mappings from the [Game Options](guide.md#game-options) screen.
+
+### Save Backups
+
+Controls how many backup copies of local saves are retained when a newer save is downloaded from the server:
+
+- **5** / **10** / **15** - Keep the N most recent backups per game
+- **No Limit** - Keep all backups (default)
+
+Backups are stored in a `.backup/` directory within each platform's save directory.
+
+---
+
+## Tools
+
+This sub-menu contains artwork management and parental controls.
+
+### Download Missing Art
+
+Scans all mapped platforms and downloads cover art for any games that don't already have cached artwork. Useful after
+adding new games to your library.
+
+Note that this artwork is only displayed within Grout's interface - it does not affect the artwork shown in your CFW's
+game list.
+
+### Kid Mode
+
+Hides some of the more advanced features for a simplified experience. When enabled, Kid Mode will hide:
+
+- The Settings screen
+- The Save Sync screen
+- The Game Options screen
+- The BIOS download screen
+
+**Temporary Override:** You can temporarily disable Kid Mode for a single session by pressing `L1` + `R1` + `Menu` during the Grout splash screen.
+
+**Permanent Disable:** Return to this menu and turn off Kid Mode.
+
+---
+
 ## Advanced Settings
 
 This sub-menu contains advanced configuration and system settings.
@@ -123,7 +196,7 @@ This sub-menu contains advanced configuration and system settings.
 Pre-cache artwork for all games across all mapped platforms. Grout scans your platforms, identifies
 games without cached artwork, and downloads cover art from RomM. Useful for pre-caching after adding new games.
 
-Note that this artwork is only displayed within Grout's interface — it does not affect the artwork shown in your CFW's game list.
+Note that this artwork is only displayed within Grout's interface - it does not affect the artwork shown in your CFW's game list.
 
 ### Rebuild Cache
 
@@ -145,6 +218,11 @@ slow connections. Options range from 15 to 120 minutes.
 How long Grout waits for responses from your RomM server before giving up. If you have a slow
 connection or are a completionist with a heavily loaded server, increase this. Options range from 15 to 300 seconds.
 
+### Server Address
+
+Change the protocol, hostname, or port of your RomM server without logging out. Useful if your server's address
+changes or you need to switch between HTTP and HTTPS.
+
 ### Release Channel
 
 Controls which release channel Grout uses for updates:
@@ -152,18 +230,6 @@ Controls which release channel Grout uses for updates:
 - **Match RomM** - Automatically matches the release channel of your RomM server
 - **Stable** - Only receive stable releases
 - **Beta** - Receive beta releases for early access to new features
-
-### Kids Mode
-
-Hides some of the more advanced settings for a simplified experience. When enabled, Kids Mode will hide:
-
-- The Settings screen
-- The BIOS download screen
-- The Game Options screen
-
-**Temporary Override:** You can temporarily disable Kids Mode for a single session by pressing `L1` + `R1` + `Menu` during the Grout splash screen.
-
-**Permanent Disable:** Return to this menu and turn off Kids Mode.
 
 ### Log Level
 

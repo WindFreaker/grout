@@ -2,10 +2,6 @@
 hash = "sha1-cde437c528224c2a08f0719f3e8b923a17642295"
 other = "Успешно загружено %d изображений обложек."
 
-[artwork_sync_confirm]
-hash = "sha1-19bd664135df62cf7f839f7fa5810b40f6e3e007"
-other = "Загрузить обложки для %d игр?"
-
 [artwork_sync_failed]
 hash = "sha1-869ec904d8bde854dcf9489791abb3eef66818f9"
 other = "Не удалось загрузить %d изображений обложек."
@@ -39,17 +35,13 @@ other = "Вы хотите загрузить все обложки или то�
 [artwork_sync_preload_missing]
 other = "Только отсутствующие"
 
-[auto_sync_waiting]
-hash = "sha1-c005f14e70da37982e2152d3af9d29a58ea8f01c"
-other = "Ожидание завершения синхронизации..."
+[artwork_sync_select_platforms]
+hash = "sha1-b4c3a8e5f2d1c0b9a8e7d6c5b4a3f2e1d0c9b8a7"
+other = "Select Platforms"
 
 [bios_download_complete]
 hash = "sha1-344ccb404588981250e2016ac355ac798d0b7e31"
 other = "Успешно загружено %d файл(ов) BIOS."
-
-[bios_download_complete_with_warnings]
-hash = "sha1-aebdf53b01e8b0931fcbddce77db5b1477cc151f"
-other = "Загружено %d файл(ов) BIOS с %d предупреждением(ями) о хэше. Файлы могут быть неправильной версии."
 
 [bios_download_failed]
 hash = "sha1-f8f2757f474c368063876856535dc676c1281ff3"
@@ -159,6 +151,22 @@ other = "Настройки"
 [cache_building]
 hash = "sha1-5c797965ec584713643883f81dd4a7b4c965791e"
 other = "Создание кэша..."
+
+[cache_clear_artwork]
+hash = "sha1-a2bbf44dc75ec0e56ce03387ff46b24a04f0e048"
+other = "Artwork"
+
+[cache_clear_both]
+hash = "sha1-4fcd25e32f6c69d12d5e6d0ef2c40f9a6f46ec82"
+other = "Metadata & Artwork"
+
+[cache_clear_metadata]
+hash = "sha1-d32b8ce0d66f32f3a2c5fae46bfe2e6fef3c7f2b"
+other = "Metadata"
+
+[cache_clear_prompt]
+hash = "sha1-e60a6d6a0e36f2f66a1c9d4bcf4e0e3e6b0b2a5c"
+other = "What would you like to clear?"
 
 [cache_collections]
 hash = "sha1-5359505ab9b75bcd412f099c13ee7d4eb5b0a509"
@@ -271,34 +279,6 @@ other = "Выбор эмулятора {{.Platform}}"
 hash = "sha1-0312ebb4e268eed54feef24bdda148a22bfd8ed9"
 other = "Ошибка загрузки платформ!\nПожалуйста, проверьте логи для получения дополнительной информации."
 
-[fuzzy_match_confirm]
-hash = "sha1-77122a913a2f76501855b92dc1c35308cc729289"
-other = "Это та же игра?"
-
-[fuzzy_match_local]
-hash = "sha1-94b9131801a4d2a854a3530eda7f576639300144"
-other = "Локальный: \"{{.Name}}\""
-
-[fuzzy_match_no]
-hash = "sha1-816c52fd2bdd94a63cd0944823a6c0aa9384c103"
-other = "Нет"
-
-[fuzzy_match_remote]
-hash = "sha1-150d67dd65dc9d6a76eae518aa00a2c5681571f3"
-other = "Совпадение: \"{{.Name}}\""
-
-[fuzzy_match_similarity]
-hash = "sha1-e6dc382e0ab0be3cc930a5fdb65fcf8ba40868c9"
-other = "Сходство: {{.Percent}}%"
-
-[fuzzy_match_title]
-hash = "sha1-3fb05a93ec92a8adb27247563abc21953352f133"
-other = "Найдено Возможное Совпадение"
-
-[fuzzy_match_yes]
-hash = "sha1-5397e0583f14f6c88de06b1ef28f460a1fb5b0ae"
-other = "Да"
-
 [game_details_average_rating]
 hash = "sha1-3843a4b5750d289e79e106bd3df7540a1a04a1fc"
 other = "Средняя оценка"
@@ -355,9 +335,11 @@ other = "Дата выпуска"
 hash = "sha1-3deb7456519697ecf4eefc455516c969a3681bae"
 other = "Тип"
 
-[game_options_save_directory]
-hash = "sha1-fc8701ec896ff0a049c9b2e9028122c196123bcc"
-other = "Каталог сохранений"
+[game_options_new_slot]
+other = "Новый Слот..."
+
+[game_options_save_slot]
+other = "Слот сохранения"
 
 [game_options_title]
 hash = "sha1-7ce298bd6c51841a35d3983c23dae2d00f50b6af"
@@ -521,10 +503,6 @@ other = "Пропустить проверку"
 hash = "sha1-dda6ac27b9d3b234a68e8b2c412e90ab5a03a4e1"
 other = "Проверять"
 
-[login_title]
-hash = "sha1-5fa984fa2afc3712f99f20f5947ada0de5d3044f"
-other = "Вход в RomM"
-
 [login_username]
 hash = "sha1-84c29015de33e5d22422382a372caba5c58f8c01"
 other = "Имя пользователя"
@@ -581,77 +559,66 @@ other = "Бета"
 hash = "sha1-d96e5b2dd07c1733b2b013bd82922c22baade37d"
 other = "Стабильная"
 
+[save_conflict_keep_local]
+other = "Оставить локальное"
+
+[save_conflict_keep_remote]
+other = "Оставить удалённое"
+
+[save_conflict_title]
+other = "Разрешение конфликтов"
+
+[save_sync_backup_limit]
+other = "Save Backups"
+
+[save_sync_backup_no_limit]
+other = "No Limit"
+
+[save_sync_conflicts]
+other = "Конфликты"
+
+[save_sync_device_name]
+other = "Имя устройства"
+
 [save_sync_downloaded]
 hash = "sha1-c6197029254600e042230dbe5880e70c4b842e07"
 other = "Загружено"
 
-[save_sync_failed]
-hash = "sha1-09fef5d8d9a3c86b2523fef60d512606e7fe0003"
-other = "Ошибка"
+[save_sync_errors]
+other = "Ошибки"
 
-[save_sync_mode_automatic]
-hash = "sha1-ac9041e76816a34aba228a736ec30da6984c5777"
-other = "Авто"
+[save_sync_no_changes]
+other = "Всё актуально!\nИдите играть!"
 
-[save_sync_mode_manual]
-hash = "sha1-4e836fdc2572ab23d5dc8c36bd613ac6b0f82d63"
-other = "Вручную"
+[save_sync_register_device]
+other = "Register Device"
 
-[save_sync_mode_off]
-hash = "sha1-e3de5ab0ca4c69dbf00e86d2558843e8d806bb49"
-other = "Выкл"
+[save_sync_resolve_error]
+other = "Failed to connect to server.\nPlease check your connection and try again."
 
-[save_sync_rom_not_found]
-hash = "sha1-87d49e3909864beb606127edfc23062674d52829"
-other = "{{.Name}} (Не найдено в RomM)"
+[save_sync_results_title]
+other = "Синхронизация завершена"
 
 [save_sync_scanning]
 hash = "sha1-6e0e349d1314bd7909fa32d8c46698b412601d19"
 other = "Сканирование файлов сохранений..."
 
-[save_sync_scanning_roms]
-hash = "sha1-d3cb8b33b33384904f67061d62a9e3c5e05a4580"
-other = "Сканирование ROM..."
-
-[save_sync_settings_title]
-hash = "sha1-d3cc05947f3967eb75f60603d7fe6d6d88dbcf7f"
-other = "Настройки синхронизации"
-
-[save_sync_skipped]
-hash = "sha1-5a000ad7bd1b8f7f50a72ac16d1da0d16e542d91"
-other = "Пропущено"
-
-[save_sync_summary]
-hash = "sha1-6c70cf70e1245ab2eb0281a73e2febfbc34cb996"
-other = "Сводка синхронизации сохранений"
-
-[save_sync_summary_section]
-hash = "sha1-12b71c3e0fe5f7c0b8d17cc03186e281412da4a8"
-other = "Сводка"
-
 [save_sync_syncing]
 hash = "sha1-cf3c39aa4d28234527fd8d9966cae4bbbccfacb3"
 other = "Синхронизация сохранений..."
 
-[save_sync_total_processed]
-hash = "sha1-d5593d165ab03cc17bbadfc9f9d9ed9a93198cb5"
-other = "Всего обработано"
-
-[save_sync_unknown_error]
-hash = "sha1-e5fd9aa24c9417e7332e6f25936ae2a6ec8f1524"
-other = "Неизвестная ошибка"
-
-[save_sync_unmatched_saves]
-hash = "sha1-11ffd636fd7a3bf88d84e08f65c2a6cd05cfc2b2"
-other = "Несопоставленные сохранения"
-
-[save_sync_up_to_date]
-hash = "sha1-6959827aa1b48eb9297c4e5fca4133d1d8dd6970"
-other = "Всё актуально!\nИдите играть!"
-
 [save_sync_uploaded]
 hash = "sha1-80c494898ac90610a67c95502d2a56b4af4963f1"
 other = "Отправлено"
+
+[device_registration_prompt]
+other = "Введите имя для этого устройства"
+
+[device_registration_registering]
+other = "Регистрация устройства..."
+
+[device_registration_updating]
+other = "Обновление устройства..."
 
 [settings_advanced]
 hash = "sha1-4d064726954a17487f94e931f5b157b733ec22ed"
@@ -780,10 +747,6 @@ other = "Канал выпуска"
 hash = "sha1-3caa02c76bc2b97f136e706433de562fd060f48d"
 other = "Синхронизация сохранений"
 
-[settings_save_sync_settings]
-hash = "sha1-d3cc05947f3967eb75f60603d7fe6d6d88dbcf7f"
-other = "Настройки синхронизации"
-
 [settings_show_collections]
 hash = "sha1-4bbb632f02fd69807705c0179999c17d35c93b0f"
 other = "Коллекции"
@@ -803,6 +766,63 @@ other = "Предзагрузка обложек"
 [settings_title]
 hash = "sha1-c7f73bb54d928922c3838bb789ee9fb8a5b1eb37"
 other = "Настройки"
+
+[sync_history_empty]
+other = "No sync history found."
+
+[sync_history_no_cache]
+other = "Cache not available."
+
+[sync_history_title]
+other = "Sync History"
+
+[sync_menu_history]
+other = "View History"
+
+[sync_menu_sync_now]
+other = "Sync Now"
+
+[sync_menu_synced_games]
+other = "Synced Games"
+
+[sync_menu_title]
+other = "Save Sync"
+
+[synced_games_active_slot]
+other = "Active Slot"
+
+[synced_games_detail_error]
+other = "Failed to load save details."
+
+[synced_games_empty]
+other = "No synced games found."
+
+[synced_games_error]
+other = "Failed to load synced games."
+
+[synced_games_latest_file]
+other = "File"
+
+[synced_games_latest_save]
+other = "Latest Save"
+
+[synced_games_loading]
+other = "Loading synced games..."
+
+[synced_games_loading_detail]
+other = "Loading save details..."
+
+[synced_games_overview]
+other = "Overview"
+
+[synced_games_save_count]
+other = "Save Count"
+
+[synced_games_title]
+other = "Synced Games"
+
+[synced_games_total_saves]
+other = "Total Saves"
 
 [startup_error_action_exit]
 hash = "sha1-f83b6fe3aebf13744e866019556d9129cd7a55be"
@@ -944,6 +964,10 @@ other = "{{.Count}} мин назад"
 hash = "sha1-678c7342e3859f9f76837180ff8b1901d504014d"
 other = "Доступно обновление: {{.Version}}"
 
+[update_check_error]
+hash = "sha1-2b01c888d71f0a498fa1b1ccc87acb16e0293126"
+other = "{{.Error}}"
+
 [update_check_for_updates]
 hash = "sha1-8604ff8e6ae507998b6b132f2010e297ee238e72"
 other = "Проверить обновления"
@@ -979,3 +1003,114 @@ other = "Размер: {{.Size}}"
 [update_up_to_date]
 hash = "sha1-a534c74416c491ff56e75a3335ea2ee9b4e5b4ad"
 other = "У вас последняя версия ({{.Version}})"
+
+[button_sync]
+other = "Sync"
+
+[collections_syncing]
+other = "Syncing collections..."
+
+[filter_platform]
+other = "Platform"
+
+[info_cfw]
+other = "CFW"
+
+[info_romm_version]
+other = "Version"
+
+[info_token_expires]
+other = "Expires"
+
+[info_token_name]
+other = "Token"
+
+[info_token_never_expires]
+other = "Never"
+
+[info_unknown]
+other = "Unknown"
+
+[login_auth_credentials]
+other = "Credentials"
+
+[login_auth_method]
+other = "Auth Method"
+
+[login_auth_pairing_code]
+other = "Pairing Code"
+
+[login_auth_title]
+other = "Authentication"
+
+[login_error_invalid_code]
+other = "Invalid or expired pairing code.\nPlease try again."
+
+[login_pairing_code]
+other = "Pairing Code"
+
+[login_server_title]
+other = "Server"
+
+[login_validating_connection]
+other = "Validating connection..."
+
+[save_mapping_no_platforms]
+other = "No platforms with multiple emulators found."
+
+[save_mapping_title]
+other = "Save Sync Mappings"
+
+[server_address_validating]
+other = "Validating new server address..."
+
+[settings_download_art_kind_marquee]
+other = "Marquee"
+
+[settings_download_art_kind_none]
+other = "None"
+
+[settings_download_art_kind_title]
+other = "Title"
+
+[settings_download_art_preview]
+other = "Download Screenshot Preview"
+
+[settings_download_art_splash]
+other = "Download Splash Art"
+
+[settings_server_address]
+other = "Server Address"
+
+[settings_swap_face_buttons]
+other = "Swap Face Buttons"
+
+[settings_switch_to_token]
+other = "Switch to API Token"
+
+[settings_sync_local_artwork]
+other = "Download Missing Art"
+
+[settings_token_switch_success]
+other = "Successfully switched to API Token!"
+
+[settings_tools]
+other = "Tools"
+
+[startup_error_credentials_invalid]
+other = "Your credentials are invalid.\nPlease log in again."
+
+[startup_error_token_invalid]
+other = "Your API token is invalid or expired.\nPlease set up a new one."
+
+[sync_history_col_game]
+other = "Game"
+
+[sync_history_col_platform]
+other = "Platform"
+
+[sync_history_col_time]
+other = "Time"
+
+[sync_menu_save_mapping]
+other = "Save Mapping"

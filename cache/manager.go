@@ -54,9 +54,9 @@ func (s *Stats) recordError() {
 }
 
 var (
-	cacheManager     *Manager
-	cacheManagerOnce sync.Once
-	cacheManagerErr  error
+	cacheManager    *Manager
+	cacheManagerMu  sync.Mutex
+	cacheManagerErr error
 )
 
 func GetCacheManager() *Manager {
@@ -64,9 +64,20 @@ func GetCacheManager() *Manager {
 }
 
 func InitCacheManager(host romm.Host, config Config) error {
-	cacheManagerOnce.Do(func() {
-		cacheManager, cacheManagerErr = newCacheManager(host, config)
-	})
+	cacheManagerMu.Lock()
+	defer cacheManagerMu.Unlock()
+
+	if cacheManager != nil {
+		// Already initialized — just update the host
+		cacheManager.mu.Lock()
+		cacheManager.host = host
+		cacheManager.config = config
+		cacheManager.mu.Unlock()
+		cacheManagerErr = nil
+		return nil
+	}
+
+	cacheManager, cacheManagerErr = newCacheManager(host, config)
 	return cacheManagerErr
 }
 
@@ -130,11 +141,19 @@ func (cm *Manager) enableBulkLoadMode() {
 	if cm == nil || cm.db == nil {
 		return
 	}
-	cm.db.Exec("PRAGMA synchronous = OFF")
-	cm.db.Exec("PRAGMA journal_mode = OFF")
-	cm.db.Exec("PRAGMA cache_size = 100000")
-	cm.db.Exec("PRAGMA temp_store = MEMORY")
-	cm.db.Exec("PRAGMA locking_mode = EXCLUSIVE")
+	logger := gaba.GetLogger()
+	pragmas := []string{
+		"PRAGMA synchronous = OFF",
+		"PRAGMA journal_mode = OFF",
+		"PRAGMA cache_size = 100000",
+		"PRAGMA temp_store = MEMORY",
+		"PRAGMA locking_mode = EXCLUSIVE",
+	}
+	for _, p := range pragmas {
+		if _, err := cm.db.Exec(p); err != nil {
+			logger.Warn("Failed to set PRAGMA", "pragma", p, "error", err)
+		}
+	}
 }
 
 // disableBulkLoadMode restores normal SQLite durability settings
@@ -142,11 +161,19 @@ func (cm *Manager) disableBulkLoadMode() {
 	if cm == nil || cm.db == nil {
 		return
 	}
-	cm.db.Exec("PRAGMA locking_mode = NORMAL")
-	cm.db.Exec("PRAGMA journal_mode = WAL")
-	cm.db.Exec("PRAGMA synchronous = NORMAL")
-	cm.db.Exec("PRAGMA temp_store = DEFAULT")
-	cm.db.Exec("PRAGMA cache_size = -2000")
+	logger := gaba.GetLogger()
+	pragmas := []string{
+		"PRAGMA locking_mode = NORMAL",
+		"PRAGMA journal_mode = WAL",
+		"PRAGMA synchronous = NORMAL",
+		"PRAGMA temp_store = DEFAULT",
+		"PRAGMA cache_size = -2000",
+	}
+	for _, p := range pragmas {
+		if _, err := cm.db.Exec(p); err != nil {
+			logger.Warn("Failed to restore PRAGMA", "pragma", p, "error", err)
+		}
+	}
 }
 
 func (cm *Manager) IsFirstRun() bool {
@@ -184,12 +211,24 @@ func (cm *Manager) Clear() error {
 		return ErrNotInitialized
 	}
 
+	if err := cm.ClearMetadata(); err != nil {
+		return err
+	}
+	cm.ClearArtwork()
+	return nil
+}
+
+func (cm *Manager) ClearMetadata() error {
+	if cm == nil || !cm.initialized {
+		return ErrNotInitialized
+	}
+
 	logger := gaba.GetLogger()
 
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
-	tables := []string{"games", "game_collections", "collections", "platforms", "bios_availability", "filename_mappings"}
+	tables := []string{"games", "game_collections", "collections", "platforms", "cache_metadata"}
 	tables = append(tables, junctionTables...)
 	tables = append(tables, lookupTables...)
 
@@ -209,13 +248,19 @@ func (cm *Manager) Clear() error {
 		return newCacheError("clear", "", "", err)
 	}
 
+	logger.Info("Metadata cache cleared")
+	return nil
+}
+
+func (cm *Manager) ClearArtwork() {
+	logger := gaba.GetLogger()
+
 	artworkDir := GetArtworkCacheDir()
 	if fileutil.FileExists(artworkDir) {
 		os.RemoveAll(artworkDir)
 	}
 
-	logger.Info("Cache cleared")
-	return nil
+	logger.Info("Artwork cache cleared")
 }
 
 func (cm *Manager) ClearGames() error {
@@ -423,16 +468,18 @@ func GetCacheDir() string {
 	return filepath.Join(wd, ".cache")
 }
 
+// DeleteCacheFolder removes the entire cache directory and resets the singleton
+// so InitCacheManager can create a fresh instance.
 func DeleteCacheFolder() error {
 	logger := gaba.GetLogger()
 
+	cacheManagerMu.Lock()
 	if cacheManager != nil {
 		cacheManager.Close()
 		cacheManager = nil
 	}
-
-	cacheManagerOnce = sync.Once{}
 	cacheManagerErr = nil
+	cacheManagerMu.Unlock()
 
 	cacheDir := GetCacheDir()
 	if err := os.RemoveAll(cacheDir); err != nil {

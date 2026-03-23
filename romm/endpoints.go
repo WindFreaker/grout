@@ -24,6 +24,15 @@ const (
 	endpointFirmware            = "/api/firmware"
 	endpointFirmwareIdentifiers = "/api/firmware/identifiers"
 
-	endpointSaves           = "/api/saves"
-	endpointSaveIdentifiers = "/api/saves/identifiers"
+	endpointSaves          = "/api/saves"
+	endpointSaveByID       = "/api/saves/%d"
+	endpointSaveSummary    = "/api/saves/summary"
+	endpointSaveContent    = "/api/saves/%d/content"
+	endpointSaveDownloaded = "/api/saves/%d/downloaded"
+
+	endpointDevices    = "/api/devices"
+	endpointDeviceByID = "/api/devices/%s"
+
+	endpointTokenExchange = "/api/client-tokens/exchange"
+	endpointCurrentUser   = "/api/users/me"
 )

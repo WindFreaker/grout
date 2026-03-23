@@ -47,13 +47,6 @@ jobs:
                --arg changelog "${{ inputs.changelog }}" \
                '.version = $version | .changelog[$version] = $changelog' \
                pak.json > pak.json.tmp && mv pak.json.tmp pak.json
-
-            # Update build pak.json (will be copied during build)
-            mkdir -p build/Grout.pak
-            jq --arg version "${{ steps.version.outputs.value }}" \
-               --arg changelog "${{ inputs.changelog }}" \
-               '.version = $version | .changelog[$version] = $changelog' \
-               pak.json > build/Grout.pak/pak.json
           else
             echo "Version is already ${{ steps.version.outputs.value }}, skipping pak.json update"
           fi
@@ -78,40 +71,67 @@ jobs:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Package
-        run: task build extract package-next package-muos package-knulli package-spruce package-rocknix package-trimui
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Package (64-bit)
+        run: task build extract package-next package-muos package-knulli package-spruce package-rocknix package-trimui package-batocera
+
+      - name: Build and Package (32-bit)
+        run: task build-32 extract-32 package-allium package-onion
+
+      - name: Rename ARM32 binary for release
+        run: cp build32/grout build32/grout-arm32
 
       - name: Create NextUI distribution
         run: |
-          cd build/Grout.pak
+          cd dist/Grout.pak
           zip -r ../Grout.pak.zip .
 
       - name: Create muOS distribution
         run: |
-          cd build/muOS
+          cd dist/muOS
           zip -r Grout.muxapp Grout
           mv Grout.muxapp ../Grout.muxapp
 
       - name: Create Knulli distribution
         run: |
-          cd build/Knulli
+          cd dist/Knulli
           zip -r ../Grout-Knulli.zip Grout
 
       - name: Create spruce distribution
         run: |
-          cd build/Spruce
+          cd dist/Spruce
           zip -r Grout.spruce.zip Grout
           mv Grout.spruce.zip ../Grout.spruce.zip
 
       - name: Create ROCKNIX distribution
         run: |
-          cd build/ROCKNIX
+          cd dist/ROCKNIX
           zip -r ../Grout-ROCKNIX.zip Grout.sh Grout
 
       - name: Create Trimui distribution
         run: |
-          cd build/Trimui
+          cd dist/Trimui
           zip -r ../Grout-Trimui.zip Grout
+
+      - name: Create Allium distribution
+        run: |
+          cd dist/Allium
+          zip -r ../Grout-Allium.zip Grout.pak
+
+      - name: Create Onion distribution
+        run: |
+          cd dist/Onion
+          zip -r ../Grout-Onion.zip Grout
+
+      - name: Create Batocera distribution
+        run: |
+          cd dist/Batocera
+          zip -r ../Grout-Batocera.zip Grout.sh Grout
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -125,12 +145,16 @@ jobs:
 
             ${{ inputs.beta && format('Built from branch: `{0}`', github.ref_name) || '' }}
           files: |
-            build/Grout.pak.zip
-            build/Grout.muxapp
-            build/Grout.spruce.zip
-            build/Grout-Knulli.zip
-            build/Grout-ROCKNIX.zip
-            build/Grout-Trimui.zip
-            build/grout
+            dist/Grout.pak.zip
+            dist/Grout.muxapp
+            dist/Grout.spruce.zip
+            dist/Grout-Allium.zip
+            dist/Grout-Onion.zip
+            dist/Grout-Knulli.zip
+            dist/Grout-ROCKNIX.zip
+            dist/Grout-Trimui.zip
+            dist/Grout-Batocera.zip
+            build64/grout
+            build32/grout-arm32
           draft: false
           prerelease: ${{ inputs.beta }}

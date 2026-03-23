@@ -9,7 +9,7 @@ import (
 	gaba "github.com/BrandonKowalski/gabagool/v2/pkg/gabagool"
 )
 
-const schemaVersion = 7
+const schemaVersion = 11
 
 // nowUTC returns the current UTC time formatted as RFC3339 for consistent datetime storage
 func nowUTC() string {
@@ -69,6 +69,26 @@ func migrateIfNeeded(db *sql.DB) error {
 		}
 	}
 
+	// v10 removes save_mappings, filename_mappings, and failed_lookups tables (save sync ripped out)
+	if currentVersion < 10 {
+		if _, err := db.Exec("DROP TABLE IF EXISTS save_mappings"); err != nil {
+			return fmt.Errorf("migration to v10: drop save_mappings: %w", err)
+		}
+		if _, err := db.Exec("DROP TABLE IF EXISTS filename_mappings"); err != nil {
+			return fmt.Errorf("migration to v10: drop filename_mappings: %w", err)
+		}
+		if _, err := db.Exec("DROP TABLE IF EXISTS failed_lookups"); err != nil {
+			return fmt.Errorf("migration to v10: drop failed_lookups: %w", err)
+		}
+	}
+
+	// v11 removes bios_availability table (now derived from platform firmware_count)
+	if currentVersion < 11 {
+		if _, err := db.Exec("DROP TABLE IF EXISTS bios_availability"); err != nil {
+			return fmt.Errorf("migration to v11: drop bios_availability: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -123,7 +143,6 @@ func createTables(db *sql.DB) error {
 			api_name TEXT DEFAULT '',
 			custom_name TEXT DEFAULT '',
 			rom_count INTEGER DEFAULT 0,
-			has_bios INTEGER DEFAULT 0,
 			data_json TEXT NOT NULL,
 			updated_at TEXT,
 			cached_at TEXT NOT NULL
@@ -311,57 +330,6 @@ func createTables(db *sql.DB) error {
 		}
 	}
 
-	_, err = tx.Exec(`
-		CREATE TABLE IF NOT EXISTS bios_availability (
-			platform_id INTEGER PRIMARY KEY,
-			has_bios INTEGER NOT NULL DEFAULT 0,
-			checked_at TEXT NOT NULL
-		)
-	`)
-	if err != nil {
-		return err
-	}
-
-	// filename_mappings stores user's local filenames that differ from RomM's fs_name
-	// This enables matching orphan ROMs by hash and remembering the association
-	_, err = tx.Exec(`
-		CREATE TABLE IF NOT EXISTS filename_mappings (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			platform_fs_slug TEXT NOT NULL,
-			local_filename_no_ext TEXT NOT NULL,
-			rom_id INTEGER NOT NULL,
-			rom_name TEXT NOT NULL,
-			matched_at TEXT NOT NULL,
-			UNIQUE(platform_fs_slug, local_filename_no_ext)
-		)
-	`)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(`CREATE INDEX IF NOT EXISTS idx_filename_mappings_lookup ON filename_mappings(platform_fs_slug, local_filename_no_ext)`)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(`
-		CREATE TABLE IF NOT EXISTS failed_lookups (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			platform_fs_slug TEXT NOT NULL,
-			local_filename_no_ext TEXT NOT NULL,
-			last_attempt TEXT NOT NULL,
-			UNIQUE(platform_fs_slug, local_filename_no_ext)
-		)
-	`)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(`CREATE INDEX IF NOT EXISTS idx_failed_lookups ON failed_lookups(platform_fs_slug, local_filename_no_ext)`)
-	if err != nil {
-		return err
-	}
-
 	// Track per-platform game sync status
 	_, err = tx.Exec(`
 		CREATE TABLE IF NOT EXISTS platform_sync_status (
@@ -372,6 +340,32 @@ func createTables(db *sql.DB) error {
 			status TEXT DEFAULT 'pending'
 		)
 	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`
+		CREATE TABLE IF NOT EXISTS save_sync_history (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			rom_id INTEGER NOT NULL,
+			rom_name TEXT NOT NULL,
+			action TEXT NOT NULL,
+			device_id TEXT NOT NULL,
+			save_id INTEGER,
+			file_name TEXT,
+			synced_at TEXT NOT NULL
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`CREATE INDEX IF NOT EXISTS idx_save_sync_history_rom_id ON save_sync_history(rom_id)`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`CREATE INDEX IF NOT EXISTS idx_save_sync_history_device_id ON save_sync_history(device_id)`)
 	if err != nil {
 		return err
 	}
