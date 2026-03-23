@@ -80,13 +80,15 @@ nav:
       - Settings Reference: usage/settings.md
       - Save Sync: usage/save-sync.md
       - CFW Specific Info:
-          - muOS: platforms/muos.md
+          - Allium: platforms/allium.md
+          - Batocera: platforms/BATOCERA.md
           - Knulli: platforms/knulli.md
+          - muOS: platforms/muos.md
+          - NextUI: platforms/nextui.md
+          - Onion: platforms/onion.md
           - ROCKNIX: platforms/rocknix.md
           - Spruce: platforms/spruce.md
-          - NextUI: platforms/nextui.md
           - TrimUI: platforms/trimui.md
-          - Batocera: platforms/BATOCERA.md
   - Contributing:
       - contributing/index.md
       - Development Guide: contributing/development.md
