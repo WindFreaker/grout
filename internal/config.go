@@ -389,12 +389,12 @@ func (c Config) GetManualDirectory(platform romm.Platform) string {
 	return cfw.GetManualDirectory(romDir, platform.FSSlug, platform.Name)
 }
 
-func (c Config) GetFanartDirectoru(platform romm.Platform) string {
+func (c Config) GetFanartDirectory(platform romm.Platform) string {
 	romDir := c.GetPlatformRomDirectory(platform)
 	return cfw.GetFanartDirectory(romDir, platform.FSSlug, platform.Name)
 }
 
-func (c Config) GetBoxbackDirectoru(platform romm.Platform) string {
+func (c Config) GetBoxbackDirectory(platform romm.Platform) string {
 	romDir := c.GetPlatformRomDirectory(platform)
 	return cfw.GetBoxbackDirectory(romDir, platform.FSSlug, platform.Name)
 }

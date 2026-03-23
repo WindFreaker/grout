@@ -519,7 +519,7 @@ func (s *DownloadScreen) buildDownloads(config internal.Config, host romm.Host, 
 				}
 			}
 
-			boxbackDir := config.GetBoxbackDirectoru(gamePlatform)
+			boxbackDir := config.GetBoxbackDirectory(gamePlatform)
 			if config.AdditionalDownloads.BoxBack && boxbackDir != "" {
 				boxbackArtFileName := g.FsNameNoExt
 				// is cfw is ES based, use -boxback suffix to avoid conflicts with cover art
@@ -540,7 +540,7 @@ func (s *DownloadScreen) buildDownloads(config internal.Config, host romm.Host, 
 				}
 			}
 
-			fanartDir := config.GetFanartDirectoru(gamePlatform)
+			fanartDir := config.GetFanartDirectory(gamePlatform)
 			if config.AdditionalDownloads.Fanart && fanartDir != "" {
 				fanartFileName := g.FsNameNoExt
 				// is cfw is ES based, use -fanart suffix to avoid conflicts with cover art

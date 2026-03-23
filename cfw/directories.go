@@ -166,6 +166,8 @@ func GetArtMarqueeDirectory(romDir string, platformFSSlug, platformName string) 
 		return rocknix.GetArtDirectory(romDir)
 	case Knulli:
 		return knulli.GetArtDirectory(romDir)
+	case Batocera:
+		return batocera.GetArtDirectory(romDir)
 	default:
 		return ""
 	}
@@ -177,6 +179,8 @@ func GetArtVideoDirectory(romDir string, platformFSSlug, platformName string) st
 		return rocknix.GetVideoDirectory(romDir)
 	case Knulli:
 		return knulli.GetVideoDirectory(romDir)
+	case Batocera:
+		return batocera.GetVideoDirectory(romDir)
 	default:
 		return ""
 
@@ -189,6 +193,8 @@ func GetArtThumbnailDirectory(romDir string, platformFSSlug, platformName string
 		return rocknix.GetArtDirectory(romDir)
 	case Knulli:
 		return knulli.GetArtDirectory(romDir)
+	case Batocera:
+		return knulli.GetArtDirectory(romDir)
 	default:
 		return ""
 	}
@@ -200,6 +206,8 @@ func GetArtBezelDirectory(romDir string, platformFSSlug, platformName string) st
 		return rocknix.GetBezelDirectory(romDir)
 	case Knulli:
 		return knulli.GetBezelDirectory(romDir)
+	case Batocera:
+		return batocera.GetBezelDirectory(romDir)
 	default:
 		return ""
 	}
@@ -211,6 +219,8 @@ func GetManualDirectory(romDir string, platformFSSlug, platformName string) stri
 		return rocknix.GetManualDirectory(romDir)
 	case Knulli:
 		return knulli.GetManualDirectory(romDir)
+	case Batocera:
+		return batocera.GetManualDirectory(romDir)
 	default:
 		return ""
 	}
@@ -222,6 +232,8 @@ func GetBoxbackDirectory(romDir string, platformFSSlug, platformName string) str
 		return rocknix.GetArtDirectory(romDir)
 	case Knulli:
 		return knulli.GetArtDirectory(romDir)
+	case Batocera:
+		return batocera.GetArtDirectory(romDir)
 	default:
 		return ""
 	}
@@ -233,6 +245,8 @@ func GetFanartDirectory(romDir string, platformFSSlug, platformName string) stri
 		return rocknix.GetArtDirectory(romDir)
 	case Knulli:
 		return knulli.GetArtDirectory(romDir)
+	case Batocera:
+		return batocera.GetArtDirectory(romDir)
 	default:
 		return ""
 	}

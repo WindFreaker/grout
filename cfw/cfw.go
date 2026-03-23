@@ -36,7 +36,7 @@ func GetCFW() CFW {
 
 func (c CFW) IsBasedOnEmulationStation() bool {
 	switch c {
-	case Knulli, ROCKNIX:
+	case Knulli, ROCKNIX, Batocera:
 		return true
 	default:
 		return false
