@@ -411,6 +411,26 @@ func (r Rom) GetMarqueeURL(host Host) string {
 	return ""
 }
 
+func (r Rom) GetLogoURL(host Host) string {
+	var err error
+	logoURL := ""
+	if r.ScreenScraperMetadata.LogoPath != "" {
+		if !strings.Contains(r.ScreenScraperMetadata.LogoPath, RommAssetPrefix) {
+			logoURL, err = url.JoinPath(host.URL(), RommAssetPrefix, r.ScreenScraperMetadata.LogoPath)
+		} else {
+			logoURL, err = url.JoinPath(host.URL(), r.ScreenScraperMetadata.LogoPath)
+		}
+		if err != nil {
+			gaba.GetLogger().Error("Error joining host URL with logo path", "error", err, "hostURL", host.ToLoggable(), "logoPath", r.ScreenScraperMetadata.LogoPath)
+			return ""
+		}
+		return logoURL
+	} else if r.ScreenScraperMetadata.LogoURL != "" {
+		return r.ScreenScraperMetadata.LogoURL
+	}
+	return ""
+}
+
 func (r Rom) GetVideoURL(host Host) string {
 	var err error
 	videoURL := ""

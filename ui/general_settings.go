@@ -157,10 +157,11 @@ func (s *GeneralSettingsScreen) buildMenuItems(config *internal.Config) []gaba.I
 		{
 			Item: gaba.MenuItem{Text: i18n.Localize(&goi18n.Message{ID: "settings_download_emulationstation_art_marquee", Other: "Download Marquee Image"}, nil)},
 			Options: []gaba.Option{
-				{DisplayName: i18n.Localize(&goi18n.Message{ID: "common_true", Other: "True"}, nil), Value: true},
-				{DisplayName: i18n.Localize(&goi18n.Message{ID: "common_false", Other: "False"}, nil), Value: false},
+				{DisplayName: i18n.Localize(&goi18n.Message{ID: "settings_download_art_kind_none", Other: "None"}, nil), Value: artutil.ArtKindNone},
+				{DisplayName: i18n.Localize(&goi18n.Message{ID: "settings_download_art_kind_marquee", Other: "Marquee"}, nil), Value: artutil.ArtKindMarquee},
+				{DisplayName: i18n.Localize(&goi18n.Message{ID: "settings_download_art_kind_logo", Other: "Logo"}, nil), Value: artutil.ArtKindLogo},
 			},
-			SelectedOption: boolToIndex(!config.AdditionalDownloads.Marquee),
+			SelectedOption: marqueeArtToIndex(config.AdditionalDownloads.Marquee),
 			VisibleWhen:    &displayEmulationStationOptions,
 		},
 		{
@@ -263,7 +264,7 @@ func (s *GeneralSettingsScreen) applySettings(config *internal.Config, items []g
 			}
 
 		case i18n.Localize(&goi18n.Message{ID: "settings_download_emulationstation_art_marquee", Other: "Download Marquee Image"}, nil):
-			if val, ok := item.Options[item.SelectedOption].Value.(bool); ok {
+			if val, ok := item.Options[item.SelectedOption].Value.(artutil.ArtKind); ok {
 				config.AdditionalDownloads.Marquee = val
 			}
 

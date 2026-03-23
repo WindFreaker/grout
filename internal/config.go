@@ -18,7 +18,7 @@ import (
 var kidModeEnabled atomic.Bool
 
 type AdditionalDownloads struct {
-	Marquee   bool            `json:"marquee,omitempty"`
+	Marquee   artutil.ArtKind `json:"marquee,omitempty"`
 	Video     bool            `json:"video,omitempty"`
 	Thumbnail artutil.ArtKind `json:"thumbnail,omitempty"`
 	Bezel     bool            `json:"bezel,omitempty"`

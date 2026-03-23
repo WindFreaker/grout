@@ -450,7 +450,7 @@ func (s *DownloadScreen) buildDownloads(config internal.Config, host romm.Host, 
 			}
 
 			artMarqueeDir := config.GetArtMarqueeDirectory(gamePlatform)
-			if config.AdditionalDownloads.Marquee && artMarqueeDir != "" {
+			if config.AdditionalDownloads.Marquee != artutil.ArtKindNone && artMarqueeDir != "" {
 				marqueeArtFileName := g.FsNameNoExt
 				// is cfw is ES based, use -marquee suffix to avoid conflicts with cover art
 				if cfw.GetCFW().IsBasedOnEmulationStation() {
@@ -459,7 +459,14 @@ func (s *DownloadScreen) buildDownloads(config internal.Config, host romm.Host, 
 					marqueeArtFileName += ".png"
 				}
 				marqueeArtLocation := filepath.Join(artMarqueeDir, marqueeArtFileName)
-				if marqueeURL := g.GetMarqueeURL(host); marqueeURL != "" {
+				marqueeURL := ""
+				switch config.AdditionalDownloads.Marquee {
+				case artutil.ArtKindMarquee:
+					marqueeURL = g.GetMarqueeURL(host)
+				case artutil.ArtKindLogo:
+					marqueeURL = g.GetLogoURL(host)
+				}
+				if marqueeURL != "" {
 					gamelistRomEntry.ArtLocation.MarqueePath = marqueeArtLocation
 					artDownloads = append(artDownloads, artDownload{
 						URL:      marqueeURL,
