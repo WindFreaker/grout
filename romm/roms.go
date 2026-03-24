@@ -477,8 +477,14 @@ func (r Rom) GetBezelURL(host Host) string {
 }
 
 func (r Rom) GetManualURL(host Host) string {
-	if r.PathManual != "" {
-		manualURL, err := url.JoinPath(host.URL(), r.PathManual)
+	manualURL := ""
+	var err error
+	if r.PathManual != "" && r.HasManual {
+		if !strings.Contains(r.PathManual, RommAssetPrefix) {
+			manualURL, err = url.JoinPath(host.URL(), RommAssetPrefix, r.PathManual)
+		} else {
+			manualURL, err = url.JoinPath(host.URL(), r.PathManual)
+		}
 		if err != nil {
 			gaba.GetLogger().Error("Error joining host URL with manual path", "error", err, "hostURL", host.ToLoggable(), "manualPath", r.PathManual)
 			return ""
