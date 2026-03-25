@@ -115,6 +115,7 @@ jobs:
             dist/Grout-ROCKNIX.zip
             dist/Grout-Trimui.zip
             dist/Grout-Batocera-arm64.zip
+            build64/grout
             build64/grout-arm64
 
   build-amd64:
@@ -271,6 +272,7 @@ jobs:
             dist/Grout-Batocera-arm64.zip
             dist/Grout-Batocera-x86.zip
             dist/Grout-Batocera-amd64.zip
+            build64/grout
             build64/grout-arm64
             build/grout-amd64
             buildx86/grout-x86
