@@ -393,6 +393,12 @@ jobs:
           # Parse major.minor.patch for the romm key
           ROMM_KEY=$(echo "$VERSION" | sed 's/^v//' | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
 
+          # Initialize versions.json if it doesn't exist
+          if [ ! -f docs/versions.json ]; then
+            mkdir -p docs
+            echo '{"stable":null,"beta":null,"romm":{}}' > docs/versions.json
+          fi
+
           # Update versions.json
           if [ "$IS_BETA" = "true" ]; then
             jq --argjson entry "$RELEASE_ENTRY" --arg key "$ROMM_KEY" \
