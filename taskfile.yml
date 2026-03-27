@@ -5,6 +5,7 @@ vars:
   CONTAINER_NAME: grout-extract
   LABEL: app.romm.grout.build=true
   NO_CACHE: ""
+  VERSION_ARG: '{{if .GROUT_VERSION}}--build-arg GROUT_VERSION={{.GROUT_VERSION}}{{end}}'
 
 tasks:
 
@@ -12,35 +13,42 @@ tasks:
     desc: Build for ARM64
     cmds:
       - rm -rf build64
-      - docker buildx build {{.NO_CACHE}} --platform=linux/arm64 --build-arg GITHUB_ACTIONS=false --label {{.LABEL}} --load -t {{.IMAGE_NAME}} -f docker/Dockerfile .
+      - docker buildx build {{.NO_CACHE}} --platform=linux/arm64 --build-arg GITHUB_ACTIONS=false {{.VERSION_ARG}} --label {{.LABEL}} --load -t {{.IMAGE_NAME}} -f docker/Dockerfile .
     silent: true
 
   build-amd64:
     desc: Build for AMD64 (x86_64)
     cmds:
       - rm -rf build64
-      - docker buildx build {{.NO_CACHE}} --load --platform=linux/amd64 --build-arg GITHUB_ACTIONS=false --label {{.LABEL}} -t {{.IMAGE_NAME}}-amd64 -f docker/Dockerfile .
+      - docker buildx build {{.NO_CACHE}} --load --platform=linux/amd64 --build-arg GITHUB_ACTIONS=false {{.VERSION_ARG}} --label {{.LABEL}} -t {{.IMAGE_NAME}}-amd64 -f docker/Dockerfile .
+    silent: true
+
+  build-x86:
+    desc: Build for x86 (32-bit)
+    cmds:
+      - rm -rf buildx86
+      - docker buildx build {{.NO_CACHE}} --load --platform=linux/386 --build-arg GITHUB_ACTIONS=false {{.VERSION_ARG}} --label {{.LABEL}} -t {{.IMAGE_NAME}}-x86 -f docker/Dockerfile .
     silent: true
 
   build-32:
     desc: Build for ARM32
     cmds:
       - rm -rf build32
-      - docker buildx build {{.NO_CACHE}} --platform=linux/arm/v7 --build-arg GITHUB_ACTIONS=false --label {{.LABEL}} --load -t {{.IMAGE_NAME}} -f docker/32.Dockerfile .
+      - docker buildx build {{.NO_CACHE}} --platform=linux/arm/v7 --build-arg GITHUB_ACTIONS=false {{.VERSION_ARG}} --label {{.LABEL}} --load -t {{.IMAGE_NAME}} -f docker/32.Dockerfile .
     silent: true
 
   build-local:
     desc: Build for ARM64 using local gabagool workspace
     cmds:
       - rm -rf build64
-      - cd .. && docker buildx build {{.NO_CACHE}} --platform=linux/arm64 --build-arg USE_LOCAL_GABAGOOL=true --build-arg GITHUB_ACTIONS=false --label {{.LABEL}} --load -f grout/docker/Dockerfile -t {{.IMAGE_NAME}} .
+      - cd .. && docker buildx build {{.NO_CACHE}} --platform=linux/arm64 --build-arg USE_LOCAL_GABAGOOL=true --build-arg GITHUB_ACTIONS=false {{.VERSION_ARG}} --label {{.LABEL}} --load -f grout/docker/Dockerfile -t {{.IMAGE_NAME}} .
     silent: true
 
   build-32-local:
     desc: Build for ARM32 using local gabagool workspace
     cmds:
       - rm -rf build32
-      - cd .. && docker buildx build {{.NO_CACHE}} --platform=linux/arm/v7 --build-arg USE_LOCAL_GABAGOOL=true --build-arg GITHUB_ACTIONS=false --label {{.LABEL}} --load -f grout/docker/32.Dockerfile -t {{.IMAGE_NAME}} .
+      - cd .. && docker buildx build {{.NO_CACHE}} --platform=linux/arm/v7 --build-arg USE_LOCAL_GABAGOOL=true --build-arg GITHUB_ACTIONS=false {{.VERSION_ARG}} --label {{.LABEL}} --load -f grout/docker/32.Dockerfile -t {{.IMAGE_NAME}} .
     silent: true
 
   extract:
@@ -65,6 +73,17 @@ tasks:
       - docker rm {{.CONTAINER_NAME}}
     silent: true
 
+  extract-x86:
+    desc: Extract binary and libraries from x86 Docker image
+    cmds:
+      - mkdir -p buildx86/lib
+      - docker rm {{.CONTAINER_NAME}} 2>/dev/null || true
+      - docker create --name {{.CONTAINER_NAME}} --label {{.LABEL}} {{.IMAGE_NAME}}-x86
+      - docker cp {{.CONTAINER_NAME}}:/build/grout buildx86/grout
+      - docker cp {{.CONTAINER_NAME}}:/usr/lib/i386-linux-gnu/libSDL2_gfx-1.0.so.0.0.2 buildx86/lib/libSDL2_gfx-1.0.so.0
+      - docker rm {{.CONTAINER_NAME}}
+    silent: true
+
   extract-32:
     desc: Extract binary and libraries from Docker image
     cmds:
@@ -78,7 +97,7 @@ tasks:
 
   package:
     desc: Package for all platforms
-    deps: [ package-next, package-muos, package-knulli, package-spruce, package-rocknix, package-trimui, package-allium, package-onion, package-batocera ]
+    deps: [ package-next, package-muos, package-knulli, package-spruce, package-rocknix, package-trimui, package-allium, package-onion, package-minui, package-minui-arm32, package-batocera, package-batocera-x86, package-batocera-amd64 ]
     silent: true
 
   package-next:
@@ -170,15 +189,57 @@ tasks:
       - chmod a+x dist/Trimui/Grout/grout/grout dist/Trimui/Grout/launch.sh
     silent: true
 
-  package-batocera:
-    desc: Package for Batocera
+  package-minui:
+    desc: Package MinUI for ARM64
     cmds:
-      - rm -rf dist/Batocera
-      - mkdir -p dist/Batocera/Grout/lib
-      - cp scripts/Batocera/Grout.sh dist/Batocera/
-      - cp build64/grout README.md LICENSE dist/Batocera/Grout/
-      - cp -R build64/lib/* dist/Batocera/Grout/lib/
-      - chmod a+x dist/Batocera/Grout/grout dist/Batocera/Grout.sh
+      - rm -rf dist/MinUI-arm64
+      - mkdir -p dist/MinUI-arm64/Grout/lib
+      - cp build64/grout scripts/MinUI/launch.sh README.md LICENSE dist/MinUI-arm64/Grout
+      - cp -R build64/lib/* dist/MinUI-arm64/Grout/lib/
+      - chmod a+x dist/MinUI-arm64/Grout/grout dist/MinUI-arm64/Grout/launch.sh
+    silent: true
+
+  package-minui-arm32:
+    desc: Package MinUI for ARM32
+    cmds:
+      - rm -rf dist/MinUI-arm32
+      - mkdir -p dist/MinUI-arm32/Grout/lib
+      - cp build32/grout scripts/MinUI/launch.sh README.md LICENSE dist/MinUI-arm32/Grout
+      - cp -R vendored/miyoo/* dist/MinUI-arm32/Grout/lib/
+      - chmod a+x dist/MinUI-arm32/Grout/grout dist/MinUI-arm32/Grout/launch.sh
+    silent: true
+
+  package-batocera:
+    desc: Package for Batocera (ARM64)
+    cmds:
+      - rm -rf dist/Batocera-arm64
+      - mkdir -p dist/Batocera-arm64/Grout/lib
+      - cp scripts/Batocera/Grout.sh dist/Batocera-arm64/
+      - cp build64/grout README.md LICENSE dist/Batocera-arm64/Grout/
+      - cp -R build64/lib/* dist/Batocera-arm64/Grout/lib/
+      - chmod a+x dist/Batocera-arm64/Grout/grout dist/Batocera-arm64/Grout.sh
+    silent: true
+
+  package-batocera-x86:
+    desc: Package for Batocera (x86 32-bit)
+    cmds:
+      - rm -rf dist/Batocera-x86
+      - mkdir -p dist/Batocera-x86/Grout/lib
+      - cp scripts/Batocera/Grout.sh dist/Batocera-x86/
+      - cp buildx86/grout README.md LICENSE dist/Batocera-x86/Grout/
+      - cp -R buildx86/lib/* dist/Batocera-x86/Grout/lib/
+      - chmod a+x dist/Batocera-x86/Grout/grout dist/Batocera-x86/Grout.sh
+    silent: true
+
+  package-batocera-amd64:
+    desc: Package for Batocera (AMD64/x86_64)
+    cmds:
+      - rm -rf dist/Batocera-amd64
+      - mkdir -p dist/Batocera-amd64/Grout/lib
+      - cp scripts/Batocera/Grout.sh dist/Batocera-amd64/
+      - cp build/grout README.md LICENSE dist/Batocera-amd64/Grout/
+      - cp -R build/lib/* dist/Batocera-amd64/Grout/lib/
+      - chmod a+x dist/Batocera-amd64/Grout/grout dist/Batocera-amd64/Grout.sh
     silent: true
 
   batocera-amd64:
@@ -186,12 +247,7 @@ tasks:
     cmds:
       - task: build-amd64
       - task: extract-amd64
-      - rm -rf dist/Batocera
-      - mkdir -p dist/Batocera/Grout/lib
-      - cp scripts/Batocera/Grout.sh dist/Batocera/
-      - cp build/grout README.md LICENSE dist/Batocera/Grout/
-      - cp -R build/lib/* dist/Batocera/Grout/lib/
-      - chmod a+x dist/Batocera/Grout/grout dist/Batocera/Grout.sh
+      - task: package-batocera-amd64
     silent: true
 
   all:
@@ -341,7 +397,7 @@ tasks:
   clean:
     desc: Remove build artifacts
     cmds:
-      - rm -rf build64 build32 dist
+      - rm -rf build64 build buildx86 build32 dist
     silent: true
 
   hooks-setup:
