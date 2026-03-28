@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"unicode"
 )
 
 const sfoMagic = "\x00PSF"
@@ -97,7 +99,7 @@ func ParseSFO(data []byte) (map[string]string, error) {
 }
 
 // ReadPSPSaveTitle reads the PARAM.SFO inside a PPSSPP save directory
-// and returns the game title.
+// and returns the game title with special characters stripped.
 func ReadPSPSaveTitle(saveDirPath string) (string, bool) {
 	sfoPath := filepath.Join(saveDirPath, "PARAM.SFO")
 	data, err := os.ReadFile(sfoPath)
@@ -115,5 +117,21 @@ func ReadPSPSaveTitle(saveDirPath string) (string, bool) {
 		title, ok = params["SAVEDATA_TITLE"]
 	}
 
+	if ok && title != "" {
+		title = cleanTitle(title)
+	}
+
 	return title, ok && title != ""
+}
+
+// cleanTitle strips trademark symbols, copyright signs, and other non-standard
+// characters that publishers embed in SFO titles but aren't in ROM filenames.
+func cleanTitle(title string) string {
+	var b strings.Builder
+	for _, r := range title {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r) || r == '-' || r == '_' || r == '\'' || r == '.' || r == '!' || r == '?' || r == ',' || r == ':' || r == '&' || r == '(' || r == ')' {
+			b.WriteRune(r)
+		}
+	}
+	return strings.TrimSpace(b.String())
 }

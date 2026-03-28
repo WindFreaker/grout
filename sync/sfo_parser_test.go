@@ -37,7 +37,7 @@ func TestParseSFO_FieldCommander(t *testing.T) {
 	}
 
 	if params["TITLE"] != "Field Commander™" {
-		t.Errorf("TITLE = %q, want 'Field Commander'", params["TITLE"])
+		t.Errorf("TITLE = %q, want 'Field Commander™'", params["TITLE"])
 	}
 	if params["SAVEDATA_DIRECTORY"] != "ULUS10088010000" {
 		t.Errorf("SAVEDATA_DIRECTORY = %q, want 'ULUS10088010000'", params["SAVEDATA_DIRECTORY"])
@@ -96,7 +96,7 @@ func TestReadPSPSaveTitle_FieldCommander(t *testing.T) {
 	if !ok {
 		t.Fatal("expected to find title")
 	}
-	if title != "Field Commander™" {
+	if title != "Field Commander" {
 		t.Errorf("title = %q, want 'Field Commander'", title)
 	}
 }
