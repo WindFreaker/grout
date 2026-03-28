@@ -287,14 +287,14 @@
     "file/EasyRPG Player"
   ],
   "saturn": [
-    "file/YabaSanshiro (External)",
+    "file/YabaSanshiro-Ext",
     "file/Beetle Saturn",
     "file/YabaSanshiro",
     "file/YabaSanshiro (External - No BIOS)",
     "file/Yabause"
   ],
   "scummvm": [
-    "file/ScummVM (External)",
+    "file/ScummVM-Ext",
     "file/ScummVM"
   ],
   "sega32": [
