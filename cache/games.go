@@ -390,7 +390,7 @@ func (cm *Manager) SaveCollectionGames(collection romm.Collection, games []romm.
 	defer cm.mu.Unlock()
 
 	// Get the collection's internal ID (collection should already be saved)
-	collectionID, err := cm.getCollectionInternalIDLocked(collection)
+	collectionID, err := cm.getCollectionInternalID(collection)
 	if err != nil {
 		return err
 	}
@@ -465,10 +465,6 @@ func (cm *Manager) getCollectionInternalID(collection romm.Collection) (int64, e
 	}
 
 	return id, nil
-}
-
-func (cm *Manager) getCollectionInternalIDLocked(collection romm.Collection) (int64, error) {
-	return cm.getCollectionInternalID(collection)
 }
 
 func (cm *Manager) ResolveCollectionID(collection romm.Collection) (int64, error) {
