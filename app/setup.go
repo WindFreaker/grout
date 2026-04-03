@@ -8,6 +8,7 @@ import (
 	"grout/cfw/minui"
 	"grout/cfw/muos"
 	"grout/cfw/onion"
+	"grout/cfw/rocknix"
 	"grout/cfw/spruce"
 	"grout/internal"
 	"grout/internal/environment"
@@ -87,6 +88,8 @@ func setupInputMapping(currentCFW cfw.CFW) {
 		mappingBytes, mappingErr = minui.GetInputMappingBytes()
 	case cfw.Spruce:
 		mappingBytes, mappingErr = spruce.GetInputMappingBytes()
+	case cfw.ROCKNIX:
+		mappingBytes, mappingErr = rocknix.GetInputMappingBytes()
 	}
 
 	if mappingBytes != nil && mappingErr == nil {
